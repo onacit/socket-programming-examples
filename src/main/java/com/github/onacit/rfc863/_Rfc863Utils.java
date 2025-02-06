@@ -1,11 +1,14 @@
 package com.github.onacit.rfc863;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.concurrent.Callable;
 
+@Slf4j
 final class _Rfc863Utils {
 
     static void readQuit() throws IOException {
@@ -17,12 +20,18 @@ final class _Rfc863Utils {
         }
     }
 
-    static <V> V readQuitAndCall(final Callable<V> callable) throws Exception {
-        readQuit();
-        return callable.call();
+    static void readQuitAndCall(final Callable<?> callable) {
+        Thread.ofPlatform().start(() -> {
+            try {
+                readQuit();
+                callable.call();
+            } catch (final Exception e) {
+                log.debug("failed to read quit and call " + callable, e);
+            }
+        });
     }
 
-    static void readQuitAndClose(final Closeable closeable) throws Exception {
+    static void readQuitAndClose(final Closeable closeable) {
         readQuitAndCall(() -> {
             closeable.close();
             return null;

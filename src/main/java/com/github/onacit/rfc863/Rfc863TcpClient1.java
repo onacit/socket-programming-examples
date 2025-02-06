@@ -11,10 +11,12 @@ class Rfc863TcpClient1 {
 
     public static void main(final String... args) throws Exception {
         try (var client = new Socket()) {
+            client.setReuseAddress(true);
             client.connect(_Rfc863Constants.ENDPOINT);
-            log.debug("connected to {}", client.getRemoteSocketAddress());
+            log.debug("connected to {} through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
+            _Rfc863Utils.readQuitAndClose(client);
             while (true) {
-                client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256));
+                client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // [0..255]
                 Thread.sleep(Duration.ofMillis(ThreadLocalRandom.current().nextInt(128)));
             }
         }
