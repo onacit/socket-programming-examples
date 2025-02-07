@@ -30,8 +30,24 @@ final class _Rfc863Constants {
 
     static final int PORT = 9 + 20000;
 
-    static final SocketAddress ENDPOINT = new InetSocketAddress(HOST, PORT);
+    static final SocketAddress SERVER_ENDPOINT_TO_BIND = new InetSocketAddress(HOST, PORT);
 
+    static final SocketAddress SERVER_ENDPOINT_TO_CONNECT;
+
+    static {
+        try {
+//            SERVER_ENDPOINT_TO_CONNECT = new InetSocketAddress(InetAddress.getByName("::1"), PORT);
+            SERVER_ENDPOINT_TO_CONNECT = new InetSocketAddress(InetAddress.getLocalHost(), PORT);
+        } catch (final UnknownHostException uhe) {
+            throw new RuntimeException("failed to get local host address", uhe);
+        }
+    }
+
+
+    // -----------------------------------------------------------------------------------------------------------------
+    static final int UDP_BUF_LEN = 0xFFFF - (4 + 4 + 4 + 4 + 4);
+
+    // -----------------------------------------------------------------------------------------------------------------
     private _Rfc863Constants() {
         throw new AssertionError("instantiation is not allowed");
     }
