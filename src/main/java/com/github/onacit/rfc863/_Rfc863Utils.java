@@ -21,7 +21,7 @@ final class _Rfc863Utils {
     }
 
     static void readQuitAndCall(final Callable<?> callable) {
-        Thread.ofPlatform().name("quit-reader").daemon().start(() -> {
+        Thread.ofPlatform().name("read-quit-and-call").daemon().start(() -> {
             try {
                 readQuit();
             } catch (final IOException ioe) {
@@ -45,6 +45,7 @@ final class _Rfc863Utils {
         });
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
     private _Rfc863Utils() {
         throw new AssertionError("instantiation is not allowed");
     }
