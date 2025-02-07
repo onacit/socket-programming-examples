@@ -17,9 +17,9 @@ class Rfc863Udp1Client {
             {
                 final var buffer = new byte[_Rfc863Constants.UDP_BUF_LEN];
                 packet = new DatagramPacket(buffer, buffer.length);
-                packet.setSocketAddress(_Rfc863Constants.SERVER_ENDPOINT_TO_CONNECT);
+                packet.setSocketAddress(_Rfc863Constants.SERVER_ENDPOINT);
             }
-            while (true) {
+            while (!client.isClosed()) {
                 ThreadLocalRandom.current().nextBytes(packet.getData());
                 packet.setLength(ThreadLocalRandom.current().nextInt(packet.getData().length + 1));
                 client.send(packet);

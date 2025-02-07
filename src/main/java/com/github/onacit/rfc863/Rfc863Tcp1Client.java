@@ -13,7 +13,7 @@ class Rfc863Tcp1Client {
     public static void main(final String... args) throws Exception {
         try (var client = new Socket()) {
             client.setReuseAddress(true);
-            client.connect(_Rfc863Constants.SERVER_ENDPOINT_TO_CONNECT);
+            client.connect(_Rfc863Constants.SERVER_ENDPOINT);
             log.debug("connected to {} through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
             _Rfc863Utils.readQuitAndClose(client);
             {

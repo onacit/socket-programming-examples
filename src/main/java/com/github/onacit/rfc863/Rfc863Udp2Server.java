@@ -20,10 +20,18 @@ class Rfc863Udp2Server {
             log.info("bound to {}", server.getLocalAddress());
             server.configureBlocking(false);
             final var registeredKey = server.register(selector, SelectionKey.OP_READ);
+            _Rfc863Utils.readQuitAndCall(() -> {
+                registeredKey.cancel();
+                log.debug("valid: {}", registeredKey.isValid());
+                selector.wakeup();
+                return null;
+            });
             final var buffer = ByteBuffer.allocate(_Rfc863Constants.UDP_BUF_LEN);
-            while (true) {
-                final var c = selector.select(0);
-                assert c == 1;
+            while (registeredKey.isValid()) {
+                final var numberOfKeySelected = selector.select(0);
+                if (numberOfKeySelected == 0) {
+                    continue;
+                }
                 final var selectedKeys = selector.selectedKeys();
                 assert selectedKeys.size() == 1 && selectedKeys.contains(registeredKey);
                 for (final var i = selectedKeys.iterator(); i.hasNext(); i.remove()) {
@@ -32,7 +40,7 @@ class Rfc863Udp2Server {
                     final var channel = key.channel();
                     assert channel == server;
                     final var address = ((DatagramChannel) channel).receive(buffer.clear());
-                    log.debug("discarding {} byte(s) received from {}", String.format("%1$04x", buffer.position()),
+                    log.debug("discarding 0x{} byte(s) received from {}", String.format("%1$04x", buffer.position()),
                               address);
                 }
             }

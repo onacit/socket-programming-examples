@@ -32,12 +32,12 @@ final class _Rfc863Constants {
 
     static final SocketAddress SERVER_ENDPOINT_TO_BIND = new InetSocketAddress(HOST, PORT);
 
-    static final SocketAddress SERVER_ENDPOINT_TO_CONNECT;
+    static final SocketAddress SERVER_ENDPOINT;
 
     static {
         try {
 //            SERVER_ENDPOINT_TO_CONNECT = new InetSocketAddress(InetAddress.getByName("::1"), PORT);
-            SERVER_ENDPOINT_TO_CONNECT = new InetSocketAddress(InetAddress.getLocalHost(), PORT);
+            SERVER_ENDPOINT = new InetSocketAddress(InetAddress.getLocalHost(), PORT);
         } catch (final UnknownHostException uhe) {
             throw new RuntimeException("failed to get local host address", uhe);
         }
