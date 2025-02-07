@@ -7,10 +7,12 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
 @Slf4j
-class Rfc863UdpServer1 {
+class Rfc863Udp1Server {
 
     public static void main(final String... args) throws Exception {
-        try (var server = new DatagramSocket(_Rfc863Constants.SERVER_ENDPOINT_TO_BIND)) {
+        try (var server = new DatagramSocket(null)) {
+            server.setReuseAddress(true);
+            server.bind(_Rfc863Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalSocketAddress());
             _Rfc863Utils.readQuitAndClose(server);
             final DatagramPacket packet;

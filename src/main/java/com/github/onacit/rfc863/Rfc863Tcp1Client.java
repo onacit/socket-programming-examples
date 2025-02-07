@@ -8,7 +8,7 @@ import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc863TcpClient1 {
+class Rfc863Tcp1Client {
 
     public static void main(final String... args) throws Exception {
         try (var client = new Socket()) {

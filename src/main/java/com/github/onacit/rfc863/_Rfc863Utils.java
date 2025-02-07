@@ -14,19 +14,24 @@ final class _Rfc863Utils {
     static void readQuit() throws IOException {
         final var reader = new BufferedReader(new InputStreamReader(System.in));
         for (String line; (line = reader.readLine()) != null; ) {
-            if (line.contains("quit")) {
+            if (line.toUpperCase().contains("QUIT")) {
                 break;
             }
         }
     }
 
     static void readQuitAndCall(final Callable<?> callable) {
-        Thread.ofPlatform().start(() -> {
+        Thread.ofPlatform().name("quit-reader").daemon().start(() -> {
             try {
                 readQuit();
-                callable.call();
-            } catch (final Exception e) {
-                log.debug("failed to read quit and call " + callable, e);
+            } catch (final IOException ioe) {
+                log.error("failed to read quit", ioe);
+            } finally {
+                try {
+                    callable.call();
+                } catch (final Exception e) {
+                    log.debug("failed to call {}", callable, e);
+                }
             }
         });
     }
@@ -37,7 +42,6 @@ final class _Rfc863Utils {
             return null;
         });
     }
-
 
     private _Rfc863Utils() {
         throw new AssertionError("instantiation is not allowed");

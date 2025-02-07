@@ -7,7 +7,7 @@ import java.net.ServerSocket;
 import java.util.concurrent.Executors;
 
 @Slf4j
-class Rfc863TcpServer1 {
+class Rfc863Tcp1Server {
 
     public static void main(final String... args) throws Exception {
         try (var server = new ServerSocket()) {
