@@ -12,10 +12,10 @@ class Rfc863Tcp1Client {
 
     public static void main(final String... args) throws Exception {
         try (var client = new Socket()) {
-            client.setReuseAddress(true);
+            assert !client.isConnected();
             client.connect(_Rfc863Constants.SERVER_ENDPOINT);
+            assert client.isConnected();
             log.debug("connected to {} through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
-            _Rfc863Utils.readQuitAndClose(client);
             {
                 client.shutdownInput(); // ???
                 try {
@@ -25,8 +25,16 @@ class Rfc863Tcp1Client {
                     // expected
                 }
             }
-            while (true) {
-                client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // [0..255]
+            _Rfc863Utils.readQuitAndClose(client);
+            while (!client.isClosed()) {
+                try {
+                    client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // [0..255]
+                } catch (final IOException ioe) {
+                    if (!client.isClosed()) {
+                        log.error("failed to write", ioe);
+                        throw ioe;
+                    }
+                }
                 Thread.sleep(Duration.ofMillis(ThreadLocalRandom.current().nextInt(1024)));
             }
         }

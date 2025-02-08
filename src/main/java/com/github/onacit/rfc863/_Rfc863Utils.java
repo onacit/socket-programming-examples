@@ -29,7 +29,6 @@ final class _Rfc863Utils {
             } finally {
                 try {
                     callable.call();
-                    log.debug("called {}", callable);
                 } catch (final Exception e) {
                     log.debug("failed to call {}", callable, e);
                 }
