@@ -36,6 +36,13 @@ final class _Rfc863Utils {
         });
     }
 
+    static void readQuitAndRun(final Runnable runnable) {
+        readQuitAndCall(() -> {
+            runnable.run();
+            return null;
+        });
+    }
+
     static void readQuitAndClose(final Closeable closeable) {
         readQuitAndCall(() -> {
             closeable.close();

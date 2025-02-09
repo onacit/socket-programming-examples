@@ -30,10 +30,8 @@ class Rfc863Tcp2Server {
                     log.error("failed to set reuseAddress", e);
                 }
             }
-            {
-                server.bind(_Rfc863Constants.SERVER_ENDPOINT_TO_BIND);
-                log.info("bound to {}", server.getLocalAddress());
-            }
+            server.bind(_Rfc863Constants.SERVER_ENDPOINT_TO_BIND);
+            log.info("bound to {}", server.getLocalAddress());
             server.configureBlocking(false);
             final var serverKey = server.register(selector, SelectionKey.OP_ACCEPT);
             {
@@ -45,7 +43,7 @@ class Rfc863Tcp2Server {
             }
             final var buffer = ByteBuffer.allocate(1);
             while (serverKey.isValid()) {
-                final var count = selector.select(0L);
+                final var count = selector.select(0L); // blocking call
                 assert count >= 0; // why not 1?
                 for (final var i = selector.selectedKeys().iterator(); i.hasNext(); i.remove()) {
                     final var key = i.next();
