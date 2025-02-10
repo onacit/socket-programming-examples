@@ -25,7 +25,7 @@ class Rfc863Udp3Server {
                 selector.wakeup();
                 return null;
             });
-            final var buffer = ByteBuffer.allocate(_Rfc863Constants.UDP_BUF_LEN);
+            final var dst = ByteBuffer.allocate(_Rfc863Constants.UDP_BUF_LEN);
             while (serverKey.isValid()) {
                 final var count = selector.select(0);
                 if (count == 0) {
@@ -38,8 +38,8 @@ class Rfc863Udp3Server {
                     assert key.isReadable();
                     final var channel = key.channel();
                     assert channel == server;
-                    final var address = ((DatagramChannel) channel).receive(buffer.clear());
-                    log.debug("discarding 0x{} byte(s) received from {}", String.format("%1$04x", buffer.position()),
+                    final var address = ((DatagramChannel) channel).receive(dst.clear());
+                    log.debug("discarding 0x{} byte(s) received from {}", String.format("%1$04x", dst.position()),
                               address);
                 }
             }
