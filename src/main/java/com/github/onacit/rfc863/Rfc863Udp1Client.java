@@ -15,15 +15,15 @@ class Rfc863Udp1Client {
             _Rfc863Utils.readQuitAndClose(client);
             final DatagramPacket packet;
             {
-                final var buffer = new byte[_Rfc863Constants.UDP_BUF_LEN];
-                packet = new DatagramPacket(buffer, buffer.length);
+                final var buf = new byte[_Rfc863Constants.UDP_BUF_LEN];
+                packet = new DatagramPacket(buf, buf.length);
                 packet.setSocketAddress(_Rfc863Constants.SERVER_ENDPOINT);
             }
             while (!client.isClosed()) {
                 ThreadLocalRandom.current().nextBytes(packet.getData());
                 packet.setLength(ThreadLocalRandom.current().nextInt(packet.getData().length + 1));
                 client.send(packet);
-                Thread.sleep(Duration.ofMillis(ThreadLocalRandom.current().nextInt(1024)));
+                Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
             }
         }
     }

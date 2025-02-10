@@ -35,8 +35,8 @@ class Rfc863Tcp3Server {
             server.accept( // @formatter:off
                     null,                       // <attachment>
                     new CompletionHandler<>() { // <handler>
-                        @Override public void completed(final AsynchronousSocketChannel client,
-                                                        final Object attachment) {
+                        @Override
+                        public void completed(final AsynchronousSocketChannel client, final Object attachment) {
                             final SocketAddress remoteAddress;
                             {
                                 SocketAddress rs;
@@ -49,10 +49,12 @@ class Rfc863Tcp3Server {
                                 }
                                 remoteAddress = rs;
                             }
-                            try {
-                                client.shutdownOutput();
-                            } catch (final IOException ioe) {
-                                throw new RuntimeException("failed to shutdown output", ioe);
+                            {
+                                try {
+                                    client.shutdownOutput();
+                                } catch (final IOException ioe) {
+                                    throw new RuntimeException("failed to shutdown output", ioe);
+                                }
                             }
                             final var dst = ByteBuffer.allocate(1);
                             client.read(

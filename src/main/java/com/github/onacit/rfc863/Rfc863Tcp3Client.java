@@ -30,11 +30,10 @@ class Rfc863Tcp3Client {
             final var latch = new CountDownLatch(1);
             _Rfc863Utils.readQuitAndRun(latch::countDown);
             client.connect( // @formatter:off
-                    _Rfc863Constants.SERVER_ENDPOINT,
-                    null,
-                    new CompletionHandler<>() {
-                        @Override
-                        public void completed(final Void result, final Object attachment) {
+                    _Rfc863Constants.SERVER_ENDPOINT, // <remote>
+                    null,                             // <attachment>
+                    new CompletionHandler<>() {       // <handler>
+                        @Override public void completed(final Void result, final Object attachment) {
                             try {
                                 log.debug("connected to {}", client.getRemoteAddress());
                             } catch (final IOException ioe) {
@@ -53,6 +52,7 @@ class Rfc863Tcp3Client {
                                                 Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
                                             } catch (final InterruptedException ie) {
                                                 Thread.currentThread().interrupt();
+                                                return;
                                             }
                                             ThreadLocalRandom.current().nextBytes(src.array());
                                             client.write(
@@ -63,12 +63,14 @@ class Rfc863Tcp3Client {
                                         }
                                         @Override public void failed(final Throwable exc, final Object attachment) {
                                             log.error("failed to write", exc);
+                                            latch.countDown();
                                         }
                                     }
                             );
                         }
                         @Override public void failed(final Throwable exc, final Object attachment) {
                             log.error("failed to connect", exc);
+                            latch.countDown();
                         }
                     }
             ); // @formatter:on
