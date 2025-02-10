@@ -3,15 +3,19 @@ package com.github.onacit.rfc863;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.AsynchronousCloseException;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.concurrent.Executors;
 
 @Slf4j
 class Rfc863Tcp2Server {
 
-    public static void main(final String... args) throws IOException {
-        try (var selector = Selector.open();
+    public static void main(final String... args) throws IOException, InterruptedException {
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor();
              var server = ServerSocketChannel.open()) {
             {
                 try {
@@ -32,49 +36,30 @@ class Rfc863Tcp2Server {
             }
             server.bind(_Rfc863Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalAddress());
-            server.configureBlocking(false);
-            final var serverKey = server.register(selector, SelectionKey.OP_ACCEPT);
-            {
-                _Rfc863Utils.readQuitAndCall(() -> {
-                    serverKey.cancel();
-                    selector.wakeup();
+            _Rfc863Utils.readQuitAndClose(server);
+            while (server.isOpen()) {
+                final SocketChannel client;
+                try {
+                    client = server.accept(); // non-blocking mode -> blocking call
+                } catch (final AsynchronousCloseException acc) {
+                    assert !server.isOpen();
+                    continue;
+                }
+                log.debug("accepted from {}", client.getRemoteAddress()); // ClosedChannelException, IOException
+                executor.submit(() -> {
+                    try {
+                        final var dst = ByteBuffer.allocate(1);
+                        for (int r; (r = client.read(dst.clear())) != -1 && server.isOpen(); ) {
+                            assert r == 1;
+                            log.debug("discarding {} received from {}", String.format("0x%1$02x", dst.get(0)),
+                                      client.getRemoteAddress());
+                        } // end-of-for
+                    } finally {
+                        client.close();
+                    }
                     return null;
                 });
             }
-            final var buffer = ByteBuffer.allocate(1);
-            while (serverKey.isValid()) {
-                final var count = selector.select(0L); // blocking call
-                assert count >= 0; // why not 1?
-                for (final var i = selector.selectedKeys().iterator(); i.hasNext(); i.remove()) {
-                    final var key = i.next();
-                    final var channel = key.channel();
-                    if (key.isAcceptable()) {
-                        assert channel == server;
-                        final var client = ((ServerSocketChannel) channel).accept();
-                        log.debug("accepted from {}", client.getRemoteAddress());
-                        client.configureBlocking(false);
-                        client.register(selector, SelectionKey.OP_READ);
-                    } else if (key.isReadable()) {
-                        assert channel instanceof SocketChannel;
-                        final var r = ((ReadableByteChannel) channel).read(buffer.clear());
-                        if (r == -1) {
-                            key.cancel();
-                        } else {
-                            assert r == 1; // why?
-                            log.debug("discarding {} received from {}", String.format("0x%1$02x", buffer.get(0)),
-                                      ((SocketChannel) channel).getRemoteAddress());
-                        }
-                    }
-                }
-            }
-            selector.keys().forEach(k -> {
-                k.cancel(); // including the serverKey?
-                try {
-                    k.channel().close(); // including the server?
-                } catch (final IOException ioe) {
-                    throw new RuntimeException("failed to close " + k.channel(), ioe);
-                }
-            });
-        }
+        } // end-of-try-with-resources
     }
 }

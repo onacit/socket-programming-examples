@@ -19,7 +19,7 @@ class Rfc863Tcp1Client {
             {
                 client.shutdownInput(); // ???
                 try {
-                    final var r = client.getInputStream().read();
+                    final var b = client.getInputStream().read();
                     throw new AssertionError("should not reach here");
                 } catch (final IOException ioe) {
                     // expected
@@ -27,14 +27,7 @@ class Rfc863Tcp1Client {
             }
             _Rfc863Utils.readQuitAndClose(client);
             while (!client.isClosed()) {
-                try {
-                    client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // [0..255]
-                } catch (final IOException ioe) {
-                    if (!client.isClosed()) {
-                        log.error("failed to write", ioe);
-                        throw ioe;
-                    }
-                }
+                client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // [0..255]
                 Thread.sleep(Duration.ofMillis(ThreadLocalRandom.current().nextInt(1024)));
             }
         }

@@ -12,7 +12,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CountDownLatch;
 
 @Slf4j
-class Rfc863Tcp3Server {
+class Rfc863Tcp4Server {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var server = AsynchronousServerSocketChannel.open()) {
@@ -48,6 +48,13 @@ class Rfc863Tcp3Server {
                                     rs = null;
                                 }
                                 remoteAddress = rs;
+                            }
+                            {
+                                try {
+                                    client.shutdownOutput();
+                                } catch (final IOException ioe) {
+                                    throw new RuntimeException("failed to shutdown output", ioe);
+                                }
                             }
                             final var dst = ByteBuffer.allocate(1);
                             client.read(
