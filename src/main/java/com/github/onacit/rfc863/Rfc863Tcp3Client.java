@@ -7,13 +7,12 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 class Rfc863Tcp3Client {
 
-    public static void main(final String... args) throws IOException, InterruptedException {
+    public static void main(final String... args) throws IOException {
         try (var selector = Selector.open();
              var client = SocketChannel.open()) {
             client.configureBlocking(false);
@@ -26,43 +25,47 @@ class Rfc863Tcp3Client {
             }
             _Rfc863Utils.readQuitAndCall(() -> {
                 clientKey.cancel();
+                assert !clientKey.isValid();
                 selector.wakeup();
                 return null;
             });
-            final var buffer = ByteBuffer.allocate(1);
-            while (clientKey.isValid()) {
-                final var count = selector.select(0L); // blocking call
+            for (final var src = ByteBuffer.allocate(1); clientKey.isValid(); ) {
+                final var count = selector.select(0L); // a blocking call; may be awaken by .wakeup()
                 assert count >= 0; // why not 1?
                 for (final var i = selector.selectedKeys().iterator(); i.hasNext(); i.remove()) {
                     final var key = i.next();
                     assert key == clientKey;
                     final var channel = key.channel();
                     assert channel == client;
-                    if (key.isConnectable()) {
-                        if (client.finishConnect()) {
+                    if (key.isConnectable()) { // CanceledKeyException
+                        if (!client.finishConnect()) { // IOException
+                            log.error("failed to finish connecting");
+                            key.cancel();
+                            return;
+                        } else {
                             log.debug("connected to {}", client.getRemoteAddress());
                             key.interestOpsAnd(~SelectionKey.OP_CONNECT);
                             Thread.ofVirtual().start(() -> {
+                                assert Thread.currentThread().isDaemon();
                                 while (!Thread.currentThread().isInterrupted()) {
-                                    key.interestOps(SelectionKey.OP_WRITE);
+                                    key.interestOps(SelectionKey.OP_WRITE); // CanceledKeyException
                                     selector.wakeup();
                                     try {
-                                        Thread.sleep(Duration.ofMillis(ThreadLocalRandom.current().nextInt(1024)));
+                                        Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
                                     } catch (final InterruptedException e) {
                                         Thread.currentThread().interrupt();
+                                        key.cancel();
+                                        selector.wakeup();
                                     }
                                 }
                             });
-                        } else {
-                            log.error("failed to connect to {}", _Rfc863Constants.SERVER_ENDPOINT);
-                            key.cancel();
                         }
-                    } else if (key.isWritable()) { // almost always true
-                        ThreadLocalRandom.current().nextBytes(buffer.array());
-                        final var w = client.write(buffer.clear());
-                        assert w == 1;
+                    } else if (key.isWritable()) { // almost always true; CanceledKeyException
+                        ThreadLocalRandom.current().nextBytes(src.array());
+                        final var w = client.write(src.clear());
+                        assert w == 1; // why?
                         key.interestOpsAnd(~SelectionKey.OP_WRITE);
-//                        Thread.sleep(Duration.ofMillis(ThreadLocalRandom.current().nextInt(1024)));
+//                        Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
                     }
                 }
             }
