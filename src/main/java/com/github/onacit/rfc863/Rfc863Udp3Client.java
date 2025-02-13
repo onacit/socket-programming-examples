@@ -29,11 +29,11 @@ class Rfc863Udp3Client {
                     selector.wakeup();
                 }
             });
-            _Rfc863Utils.readQuitAndRun(() -> {
+            _Utils.readQuitAndRun(() -> {
                 clientKey.cancel();
                 selector.wakeup();
             });
-            final var src = ByteBuffer.allocate(_Rfc863Constants.UDP_BUF_LEN);
+            final var src = ByteBuffer.allocate(_Constants.UDP_BUF_LEN);
             while (clientKey.isValid()) {
                 final var count = selector.select(0);
                 assert count >= 0;
@@ -48,7 +48,7 @@ class Rfc863Udp3Client {
                     src.clear()
                             .position(ThreadLocalRandom.current().nextInt(src.capacity() + 1))
                             .limit(src.position() + ThreadLocalRandom.current().nextInt(src.remaining() + 1));
-                    final var w = ((DatagramChannel) channel).send(src, _Rfc863Constants.SERVER_ENDPOINT);
+                    final var w = ((DatagramChannel) channel).send(src, _Constants.SERVER_ENDPOINT);
                     assert w >= 0;
                     assert !src.hasRemaining();
 //                    Thread.sleep(Duration.ofMillis(ThreadLocalRandom.current().nextInt(1024)));

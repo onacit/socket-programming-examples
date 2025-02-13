@@ -3,7 +3,6 @@ package com.github.onacit.rfc863;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousCloseException;
@@ -34,9 +33,9 @@ class Rfc863Tcp2Server {
                     log.error("failed to set reuseAddress", e);
                 }
             }
-            server.bind(_Rfc863Constants.SERVER_ENDPOINT_TO_BIND);
+            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalAddress());
-            _Rfc863Utils.readQuitAndClose(server);
+            _Utils.readQuitAndClose(server);
             while (server.isOpen()) {
                 final SocketChannel client;
                 try {

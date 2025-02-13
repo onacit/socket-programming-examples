@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
@@ -12,12 +11,12 @@ class Rfc863Udp1Client {
 
     public static void main(final String... args) throws Exception {
         try (var client = new DatagramSocket()) {
-            _Rfc863Utils.readQuitAndClose(client);
+            _Utils.readQuitAndClose(client);
             final DatagramPacket packet;
             {
-                final var buf = new byte[_Rfc863Constants.UDP_BUF_LEN];
+                final var buf = new byte[_Constants.UDP_BUF_LEN];
                 packet = new DatagramPacket(buf, buf.length);
-                packet.setSocketAddress(_Rfc863Constants.SERVER_ENDPOINT);
+                packet.setSocketAddress(_Constants.SERVER_ENDPOINT);
             }
             while (!client.isClosed()) {
                 ThreadLocalRandom.current().nextBytes(packet.getData());

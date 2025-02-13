@@ -12,8 +12,8 @@ class Rfc863Udp2Client {
 
     public static void main(final String... args) throws Exception {
         try (var client = DatagramChannel.open()) {
-            _Rfc863Utils.readQuitAndClose(client);
-            final var src = ByteBuffer.allocate(_Rfc863Constants.UDP_BUF_LEN);
+            _Utils.readQuitAndClose(client);
+            final var src = ByteBuffer.allocate(_Constants.UDP_BUF_LEN);
             while (client.isOpen()) {
                 ThreadLocalRandom.current().nextBytes(src.array());
                 src.clear()
@@ -22,7 +22,7 @@ class Rfc863Udp2Client {
                 final var remaining = src.remaining();
                 final int w;
                 try {
-                    w = client.send(src, _Rfc863Constants.SERVER_ENDPOINT);
+                    w = client.send(src, _Constants.SERVER_ENDPOINT);
                 } catch (final ClosedChannelException cce) {
                     assert !client.isOpen();
                     continue;

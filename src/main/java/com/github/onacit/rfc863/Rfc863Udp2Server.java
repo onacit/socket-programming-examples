@@ -25,10 +25,10 @@ class Rfc863Udp2Server {
                     log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, e);
                 }
             }
-            server.bind(_Rfc863Constants.SERVER_ENDPOINT_TO_BIND);
+            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalAddress());
-            _Rfc863Utils.readQuitAndClose(server);
-            final var dst = ByteBuffer.allocate(_Rfc863Constants.UDP_BUF_LEN);
+            _Utils.readQuitAndClose(server);
+            final var dst = ByteBuffer.allocate(_Constants.UDP_BUF_LEN);
             while (server.isOpen()) {
                 final SocketAddress a;
                 try {

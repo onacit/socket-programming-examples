@@ -17,13 +17,13 @@ class Rfc863Tcp3Client {
              var client = SocketChannel.open()) {
             client.configureBlocking(false);
             final SelectionKey clientKey;
-            if (client.connect(_Rfc863Constants.SERVER_ENDPOINT)) {
+            if (client.connect(_Constants.SERVER_ENDPOINT)) {
                 log.debug("connected to {}", client.getRemoteAddress());
                 clientKey = client.register(selector, SelectionKey.OP_WRITE);
             } else {
                 clientKey = client.register(selector, SelectionKey.OP_CONNECT);
             }
-            _Rfc863Utils.readQuitAndCall(() -> {
+            _Utils.readQuitAndCall(() -> {
                 clientKey.cancel();
                 assert !clientKey.isValid();
                 selector.wakeup();
@@ -41,7 +41,7 @@ class Rfc863Tcp3Client {
                         if (!client.finishConnect()) { // IOException
                             log.error("failed to finish connecting");
                             key.cancel();
-                            return;
+                            break;
                         } else {
                             log.debug("connected to {}", client.getRemoteAddress());
                             key.interestOpsAnd(~SelectionKey.OP_CONNECT);

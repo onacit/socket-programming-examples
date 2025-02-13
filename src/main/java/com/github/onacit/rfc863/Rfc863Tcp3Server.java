@@ -28,10 +28,10 @@ class Rfc863Tcp3Server {
                     log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, e);
                 }
             }
-            server.bind(_Rfc863Constants.SERVER_ENDPOINT_TO_BIND);
+            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalAddress());
             final var latch = new CountDownLatch(1);
-            _Rfc863Utils.readQuitAndRun(latch::countDown);
+            _Utils.readQuitAndRun(latch::countDown);
             server.accept( // @formatter:off
                     null,                       // <attachment>
                     new CompletionHandler<>() { // <handler>

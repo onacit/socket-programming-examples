@@ -28,9 +28,9 @@ class Rfc863Tcp4Client {
                 }
             }
             final var latch = new CountDownLatch(1);
-            _Rfc863Utils.readQuitAndRun(latch::countDown);
+            _Utils.readQuitAndRun(latch::countDown);
             client.connect( // @formatter:off
-                    _Rfc863Constants.SERVER_ENDPOINT, // <remote>
+                    _Constants.SERVER_ENDPOINT, // <remote>
                     null,                             // <attachment>
                     new CompletionHandler<>() {       // <handler>
                         @Override public void completed(final Void result, final Object attachment) {

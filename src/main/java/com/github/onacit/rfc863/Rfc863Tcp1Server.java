@@ -32,9 +32,9 @@ class Rfc863Tcp1Server {
                     log.error("failed to set reuseAddress", se);
                 }
             }
-            server.bind(_Rfc863Constants.SERVER_ENDPOINT_TO_BIND); // :::20009
+            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // :::20009
             log.info("bound to {}", server.getLocalSocketAddress());
-            _Rfc863Utils.readQuitAndClose(server);
+            _Utils.readQuitAndClose(server);
             while (!server.isClosed()) {
                 final Socket client;
                 try {

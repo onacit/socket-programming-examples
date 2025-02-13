@@ -8,7 +8,7 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 
 @Slf4j
-final class _Rfc863Constants {
+final class _Constants {
 
     static final InetAddress HOST;
 
@@ -48,7 +48,7 @@ final class _Rfc863Constants {
     static final int UDP_BUF_LEN = 0xFFFF - (4 + 4 + 4 + 4 + 4);
 
     // -----------------------------------------------------------------------------------------------------------------
-    private _Rfc863Constants() {
+    private _Constants() {
         throw new AssertionError("instantiation is not allowed");
     }
 }

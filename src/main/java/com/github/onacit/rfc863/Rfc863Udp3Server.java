@@ -16,30 +16,29 @@ class Rfc863Udp3Server {
              var server = DatagramChannel.open()) {
             server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE);
             server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE);
-            server.bind(_Rfc863Constants.SERVER_ENDPOINT_TO_BIND);
+            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalAddress());
             server.configureBlocking(false);
             final var serverKey = server.register(selector, SelectionKey.OP_READ);
-            _Rfc863Utils.readQuitAndCall(() -> {
+            _Utils.readQuitAndCall(() -> {
                 serverKey.cancel();
+                assert !serverKey.isValid();
                 selector.wakeup();
                 return null;
             });
-            final var dst = ByteBuffer.allocate(_Rfc863Constants.UDP_BUF_LEN);
+            final var dst = ByteBuffer.allocate(_Constants.UDP_BUF_LEN);
             while (serverKey.isValid()) {
                 final var count = selector.select(0);
-                if (count == 0) {
-                    continue;
-                }
+                assert count == 0 || count == 1;
                 final var keys = selector.selectedKeys();
-                assert keys.size() == 1 && keys.contains(serverKey);
+                assert keys.isEmpty() || (keys.size() == 1 && keys.contains(serverKey));
                 for (final var i = keys.iterator(); i.hasNext(); i.remove()) {
                     final var key = i.next();
                     assert key.isReadable();
                     final var channel = key.channel();
                     assert channel == server;
                     final var address = ((DatagramChannel) channel).receive(dst.clear());
-                    log.debug("discarding 0x{} byte(s) received from {}", String.format("%1$04x", dst.position()),
+                    log.debug("discarding {} byte(s) received from {}", String.format("%1$5d", dst.position()),
                               address);
                 }
             }

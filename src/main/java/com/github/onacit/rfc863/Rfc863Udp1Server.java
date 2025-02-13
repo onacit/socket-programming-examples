@@ -12,12 +12,12 @@ class Rfc863Udp1Server {
     public static void main(final String... args) throws Exception {
         try (var server = new DatagramSocket(null)) {
             server.setReuseAddress(true);
-            server.bind(_Rfc863Constants.SERVER_ENDPOINT_TO_BIND);
+            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalSocketAddress());
-            _Rfc863Utils.readQuitAndClose(server);
+            _Utils.readQuitAndClose(server);
             final DatagramPacket packet;
             {
-                final var buffer = new byte[_Rfc863Constants.UDP_BUF_LEN];
+                final var buffer = new byte[_Constants.UDP_BUF_LEN];
                 packet = new DatagramPacket(buffer, buffer.length);
             }
             while (true) {
