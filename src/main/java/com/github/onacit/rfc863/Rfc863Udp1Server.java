@@ -30,8 +30,8 @@ class Rfc863Udp1Server {
                     log.error("failed to receive packet", ioe);
                 }
                 final var length = packet.getLength();
-                log.debug("discarding 0x{} byte(s) received from {}", String.format("%1$04x", length),
-                        packet.getSocketAddress());
+                log.debug("discarding {} byte(s) received from {}", String.format("%1$5d", length),
+                          packet.getSocketAddress());
             }
         }
     }

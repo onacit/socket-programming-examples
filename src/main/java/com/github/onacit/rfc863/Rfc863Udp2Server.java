@@ -37,7 +37,7 @@ class Rfc863Udp2Server {
                     assert !server.isOpen();
                     continue;
                 }
-                log.debug("discarding 0x{} byte(s) received from {}", String.format("%1$04x", dst.position()), a);
+                log.debug("discarding {} byte(s) received from {}", String.format("%1$5d", dst.position()), a);
             }
         }
     }
