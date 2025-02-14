@@ -19,7 +19,7 @@ class Rfc863Tcp1Client {
             {
                 client.shutdownInput(); // ???
                 try {
-                    final var b = client.getInputStream().read();
+                    client.getInputStream().read();
                     throw new AssertionError("should not reach here");
                 } catch (final IOException ioe) {
                     // expected
