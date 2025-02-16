@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Constants;
 import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,7 +35,7 @@ class Rfc863Udp3Client {
                 clientKey.cancel();
                 selector.wakeup();
             });
-            final var src = ByteBuffer.allocate(_Constants.UDP_BUF_LEN);
+            final var src = ByteBuffer.allocate(__Constants.UDP_LEN);
             while (clientKey.isValid()) {
                 final var count = selector.select(0);
                 assert count >= 0;

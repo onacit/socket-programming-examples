@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 final class __RFC863_Constants {
 
-    public static final int PORT = 9;
+    static final int PORT = 9;
 
     // -----------------------------------------------------------------------------------------------------------------
     private __RFC863_Constants() {

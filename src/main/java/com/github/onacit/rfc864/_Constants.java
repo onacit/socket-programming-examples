@@ -7,7 +7,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 
 @Slf4j
 final class _Constants {
@@ -22,18 +21,12 @@ final class _Constants {
 
     static {
         try {
-//            SERVER_ENDPOINT_TO_CONNECT = new InetSocketAddress(InetAddress.getByName("::1"), PORT);
-            SERVER_ENDPOINT = new InetSocketAddress(InetAddress.getLocalHost(), PORT);
+            SERVER_ENDPOINT = new InetSocketAddress(InetAddress.getByName("::1"), PORT);
+//            SERVER_ENDPOINT = new InetSocketAddress(InetAddress.getLocalHost(), PORT);
         } catch (final UnknownHostException uhe) {
             throw new RuntimeException("failed to get the address of the local host", uhe);
         }
     }
-
-    // -----------------------------------------------------------------------------------------------------------------
-    static final ByteBuffer PATTERN_BUFFER = __Rfc864_Utils.newReadOnlyPatternBuffer();
-
-    // -----------------------------------------------------------------------------------------------------------------
-    static final int UDP_BUF_LEN = 512;
 
     // -----------------------------------------------------------------------------------------------------------------
     private _Constants() {

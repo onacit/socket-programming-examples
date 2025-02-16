@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -20,13 +19,8 @@ class Rfc863Tcp2Client {
             __Utils.readQuitAndClose(true, client);
             for (final var src = ByteBuffer.allocate(1); client.isOpen(); ) {
                 ThreadLocalRandom.current().nextBytes(src.array());
-                try {
-                    final var w = client.write(src.clear());
-                    assert w >= 0;
-                } catch (final ClosedChannelException cce) {
-                    assert !client.isOpen();
-                    continue;
-                }
+                final var w = client.write(src.clear()); // IOException
+                assert w >= 0; // why?
                 Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
             }
         }

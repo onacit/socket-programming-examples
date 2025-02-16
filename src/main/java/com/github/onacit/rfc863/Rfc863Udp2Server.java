@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Constants;
 import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +30,7 @@ class Rfc863Udp2Server {
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalAddress());
             __Utils.readQuitAndClose(true, server);
-            final var dst = ByteBuffer.allocate(_Constants.UDP_BUF_LEN);
+            final var dst = ByteBuffer.allocate(__Constants.UDP_LEN);
             while (server.isOpen()) {
                 final SocketAddress a;
                 try {

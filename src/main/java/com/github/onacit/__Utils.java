@@ -14,7 +14,6 @@ import java.util.function.BiConsumer;
 })
 public final class __Utils {
 
-
     static void readQuit(final BufferedReader reader) throws IOException {
         Objects.requireNonNull(reader, "reader is null");
         for (String l; (l = reader.readLine()) != null; ) {

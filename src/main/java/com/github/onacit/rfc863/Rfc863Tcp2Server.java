@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 @Slf4j
 class Rfc863Tcp2Server {
 
-    public static void main(final String... args) throws IOException, InterruptedException {
+    public static void main(final String... args) throws IOException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor();
              var server = ServerSocketChannel.open()) {
             {
@@ -61,7 +61,7 @@ class Rfc863Tcp2Server {
                     }
                     return null;
                 });
-            }
+            } // end-of-while-loop
         } // end-of-try-with-resources
     }
 }

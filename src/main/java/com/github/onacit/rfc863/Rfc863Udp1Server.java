@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Constants;
 import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,7 +19,7 @@ class Rfc863Udp1Server {
             __Utils.readQuitAndClose(true, server);
             final DatagramPacket packet;
             {
-                final var buffer = new byte[_Constants.UDP_BUF_LEN];
+                final var buffer = new byte[__Constants.UDP_LEN];
                 packet = new DatagramPacket(buffer, buffer.length);
             }
             while (!server.isClosed()) {

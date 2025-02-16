@@ -54,7 +54,7 @@ class Rfc863Tcp3Client {
                                     selector.wakeup();
                                     try {
                                         Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
-                                    } catch (final InterruptedException e) {
+                                    } catch (final InterruptedException ie) {
                                         Thread.currentThread().interrupt();
                                         key.cancel();
                                         selector.wakeup();

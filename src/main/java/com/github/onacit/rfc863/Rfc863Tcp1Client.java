@@ -5,20 +5,19 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 class Rfc863Tcp1Client {
 
-    public static void main(final String... args) throws Exception {
+    public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = new Socket()) {
             assert !client.isConnected();
-            client.connect(_Constants.SERVER_ENDPOINT);
+            client.connect(_Constants.SERVER_ENDPOINT); // IOException
             assert client.isConnected();
             log.debug("connected to {}, through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
             {
-                client.shutdownInput(); // ???
+                client.shutdownInput(); // IOException
                 try {
                     client.getInputStream().read();
                     throw new AssertionError("should not reach here");
@@ -28,8 +27,8 @@ class Rfc863Tcp1Client {
             }
             __Utils.readQuitAndClose(true, client);
             while (!client.isClosed()) {
-                client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // [0..255]
-                Thread.sleep(Duration.ofMillis(ThreadLocalRandom.current().nextInt(1024)));
+                client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // [0..255] // IOException
+                Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
             }
         }
     }

@@ -38,17 +38,11 @@ class Rfc863Tcp1Server {
             __Utils.readQuitAndClose(true, server);
             while (!server.isClosed()) {
                 final Socket client;
-                try {
-                    client = server.accept(); // IOException
-                    log.debug("accepted from {}", client.getRemoteSocketAddress());
-                } catch (final IOException ioe) {
-                    if (!server.isClosed()) {
-                        log.error("failed to accept", ioe);
-                    }
-                    continue;
-                }
+                client = server.accept(); // IOException
                 executor.submit(() -> {
                     try {
+                        assert Thread.currentThread().isDaemon(); // virtual thread
+                        log.debug("accepted from {}", client.getRemoteSocketAddress());
                         for (int r; (r = client.getInputStream().read()) != -1 && !server.isClosed(); ) { // IOException
                             log.debug("discarding {} received from {}", String.format("0x%1$02x", r),
                                       client.getRemoteSocketAddress());

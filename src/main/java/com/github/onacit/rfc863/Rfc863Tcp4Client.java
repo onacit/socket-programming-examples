@@ -76,7 +76,7 @@ class Rfc863Tcp4Client {
                         }
                     }
             ); // @formatter:on
-            latch.await();
+            latch.await(); // InterruptedException
         }
     }
 }

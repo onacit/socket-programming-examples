@@ -11,7 +11,7 @@ import java.nio.channels.*;
 @Slf4j
 class Rfc863Tcp3Server {
 
-    public static void main(final String... args) throws IOException, InterruptedException {
+    public static void main(final String... args) throws IOException {
         try (var selector = Selector.open();
              var server = ServerSocketChannel.open()) {
             {

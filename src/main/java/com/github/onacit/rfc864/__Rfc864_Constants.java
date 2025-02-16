@@ -11,7 +11,6 @@ public final class __Rfc864_Constants {
     public static final String PATTERN =
             "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
 
-
     private __Rfc864_Constants() {
         throw new AssertionError("instantiation is not allowed");
     }
