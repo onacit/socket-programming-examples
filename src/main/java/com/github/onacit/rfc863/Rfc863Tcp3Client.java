@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -18,12 +19,12 @@ class Rfc863Tcp3Client {
             client.configureBlocking(false);
             final SelectionKey clientKey;
             if (client.connect(_Constants.SERVER_ENDPOINT)) {
-                log.debug("connected to {}", client.getRemoteAddress());
+                log.debug("connected to {}, through {}", client.getRemoteAddress(), client.getLocalAddress());
                 clientKey = client.register(selector, SelectionKey.OP_WRITE);
             } else {
                 clientKey = client.register(selector, SelectionKey.OP_CONNECT);
             }
-            _Utils.readQuitAndCall(() -> {
+            __Utils.readQuitAndCall(true, () -> {
                 clientKey.cancel();
                 assert !clientKey.isValid();
                 selector.wakeup();
@@ -43,11 +44,12 @@ class Rfc863Tcp3Client {
                             key.cancel();
                             break;
                         } else {
-                            log.debug("connected to {}", client.getRemoteAddress());
+                            log.debug("connected to {}, through {}", client.getRemoteAddress(),
+                                      client.getLocalAddress());
                             key.interestOpsAnd(~SelectionKey.OP_CONNECT);
                             Thread.ofVirtual().start(() -> {
                                 assert Thread.currentThread().isDaemon();
-                                while (!Thread.currentThread().isInterrupted()) {
+                                while (!Thread.currentThread().isInterrupted() && key.isValid()) {
                                     key.interestOps(SelectionKey.OP_WRITE); // CanceledKeyException
                                     selector.wakeup();
                                     try {
@@ -62,13 +64,15 @@ class Rfc863Tcp3Client {
                         }
                     } else if (key.isWritable()) { // almost always true; CanceledKeyException
                         ThreadLocalRandom.current().nextBytes(src.array());
-                        final var w = client.write(src.clear());
+                        final var w = client.write(src.clear()); // IOException
                         assert w == 1; // why?
                         key.interestOpsAnd(~SelectionKey.OP_WRITE);
-//                        Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
+//                        Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // DO NOT DO THIS!!!
                     }
                 }
             }
+            log.debug("out of for-loop");
         }
+        log.debug("out-of-try-with-resources");
     }
 }

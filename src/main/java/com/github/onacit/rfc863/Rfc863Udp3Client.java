@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
@@ -18,7 +19,7 @@ class Rfc863Udp3Client {
             client.configureBlocking(false);
             final var clientKey = client.register(selector, SelectionKey.OP_WRITE);
             Thread.ofPlatform().name("write-op-setter").daemon(true).start(() -> {
-                while(true) {
+                while (true) {
                     try {
                         Thread.sleep(Duration.ofMillis(ThreadLocalRandom.current().nextInt(1024)));
                     } catch (final InterruptedException ie) {
@@ -29,7 +30,7 @@ class Rfc863Udp3Client {
                     selector.wakeup();
                 }
             });
-            _Utils.readQuitAndRun(() -> {
+            __Utils.readQuitAndRun(true, () -> {
                 clientKey.cancel();
                 selector.wakeup();
             });

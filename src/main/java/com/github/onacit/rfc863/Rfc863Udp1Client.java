@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.DatagramPacket;
@@ -11,7 +12,7 @@ class Rfc863Udp1Client {
 
     public static void main(final String... args) throws Exception {
         try (var client = new DatagramSocket()) {
-            _Utils.readQuitAndClose(client);
+            __Utils.readQuitAndClose(true, client);
             final DatagramPacket packet;
             {
                 final var buf = new byte[_Constants.UDP_BUF_LEN];

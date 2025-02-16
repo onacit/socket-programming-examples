@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -14,13 +15,13 @@ class Rfc863Udp1Server {
             server.setReuseAddress(true);
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalSocketAddress());
-            _Utils.readQuitAndClose(server);
+            __Utils.readQuitAndClose(true, server);
             final DatagramPacket packet;
             {
                 final var buffer = new byte[_Constants.UDP_BUF_LEN];
                 packet = new DatagramPacket(buffer, buffer.length);
             }
-            while (true) {
+            while (!server.isClosed()) {
                 try {
                     server.receive(packet);
                 } catch (final IOException ioe) {

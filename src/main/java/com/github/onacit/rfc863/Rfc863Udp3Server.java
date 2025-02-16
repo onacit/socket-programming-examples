@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.StandardSocketOptions;
@@ -20,7 +21,7 @@ class Rfc863Udp3Server {
             log.info("bound to {}", server.getLocalAddress());
             server.configureBlocking(false);
             final var serverKey = server.register(selector, SelectionKey.OP_READ);
-            _Utils.readQuitAndCall(() -> {
+            __Utils.readQuitAndCall(true, () -> {
                 serverKey.cancel();
                 assert !serverKey.isValid();
                 selector.wakeup();

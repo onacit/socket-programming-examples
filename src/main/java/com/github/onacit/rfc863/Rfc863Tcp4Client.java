@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -28,14 +29,15 @@ class Rfc863Tcp4Client {
                 }
             }
             final var latch = new CountDownLatch(1);
-            _Utils.readQuitAndRun(latch::countDown);
+            __Utils.readQuitAndRun(false, latch::countDown);
             client.connect( // @formatter:off
                     _Constants.SERVER_ENDPOINT, // <remote>
-                    null,                             // <attachment>
-                    new CompletionHandler<>() {       // <handler>
+                    null,                       // <attachment>
+                    new CompletionHandler<>() { // <handler>
                         @Override public void completed(final Void result, final Object attachment) {
                             try {
-                                log.debug("connected to {}", client.getRemoteAddress());
+                                log.debug("connected to {}, through {}", client.getRemoteAddress(),
+                                          client.getLocalAddress());
                             } catch (final IOException ioe) {
                                 throw new RuntimeException("failed to get remote address of " + client, ioe);
                             }

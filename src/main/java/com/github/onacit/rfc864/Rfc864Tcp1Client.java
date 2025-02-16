@@ -5,8 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.net.StandardSocketOptions;
-import java.time.Duration;
 
 @Slf4j
 class Rfc864Tcp1Client {
@@ -19,9 +17,9 @@ class Rfc864Tcp1Client {
             log.debug("connected to {} through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
             client.shutdownOutput(); // IOException
             {
-                client.setSoTimeout(1024);
+                client.setSoTimeout(1024); // SocketException
             }
-            __Utils.readQuitAndClose(client);
+            __Utils.readQuitAndClose(true, client);
             for (int r; !client.isClosed(); ) {
                 while ((r = client.getInputStream().read()) != -1) { // IOException
                     System.out.print((char) r);

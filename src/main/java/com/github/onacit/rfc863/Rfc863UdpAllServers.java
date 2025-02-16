@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -7,15 +8,15 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-class Rfc863UdpClient {
+class Rfc863UdpAllServers {
 
     public static void main(final String... args) {
         final var classes = List.of(
-                Rfc863Udp1Client.class,
-                Rfc863Udp2Client.class,
-                Rfc863Udp3Client.class
+                Rfc863Udp1Server.class,
+                Rfc863Udp2Server.class,
+                Rfc863Udp3Server.class
         );
-        _Utils.acceptCommandAndClasspath((command, classpath) -> {
+        __Utils.acceptCommandAndClasspath((command, classpath) -> {
             final var processes = classes.stream()
                     .map(c -> new ProcessBuilder(command, "-cp", classpath, c.getName())
                             .redirectOutput(ProcessBuilder.Redirect.INHERIT))
@@ -30,7 +31,7 @@ class Rfc863UdpClient {
                         log.debug("process: {}", p.info());
                     })
                     .toList();
-            _Utils.readQuitAndRun(() -> {
+            __Utils.readQuitAndRun(false, () -> {
                 processes.forEach(p -> {
                     try {
                         p.getOutputStream().write("quit\r\n".getBytes());

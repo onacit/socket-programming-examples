@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -15,10 +16,9 @@ class Rfc863Tcp2Client {
         try (var client = SocketChannel.open()) {
             final var connected = client.connect(_Constants.SERVER_ENDPOINT);
             assert connected;
-            log.debug("connected to {}", client.getRemoteAddress());
-            _Utils.readQuitAndClose(client);
-            final var src = ByteBuffer.allocate(1);
-            while (client.isOpen()) {
+            log.debug("connected to {}, through {}", client.getRemoteAddress(), client.getLocalAddress());
+            __Utils.readQuitAndClose(true, client);
+            for (final var src = ByteBuffer.allocate(1); client.isOpen(); ) {
                 ThreadLocalRandom.current().nextBytes(src.array());
                 try {
                     final var w = client.write(src.clear());

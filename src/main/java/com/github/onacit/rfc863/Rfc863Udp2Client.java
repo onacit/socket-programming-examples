@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
@@ -12,7 +13,7 @@ class Rfc863Udp2Client {
 
     public static void main(final String... args) throws Exception {
         try (var client = DatagramChannel.open()) {
-            _Utils.readQuitAndClose(client);
+            __Utils.readQuitAndClose(true, client);
             final var src = ByteBuffer.allocate(_Constants.UDP_BUF_LEN);
             while (client.isOpen()) {
                 ThreadLocalRandom.current().nextBytes(src.array());

@@ -36,7 +36,7 @@ class Rfc864Tcp2Server {
             }
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalAddress());
-            __Utils.readQuitAndClose(server);
+            __Utils.readQuitAndClose(true, server);
             while (server.isOpen()) {
                 final var client = server.accept(); // will block indefinitely; IOException
                 executor.submit(() -> {

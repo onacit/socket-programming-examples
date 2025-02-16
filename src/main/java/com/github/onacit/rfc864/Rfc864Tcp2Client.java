@@ -4,7 +4,6 @@ import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
@@ -20,7 +19,7 @@ class Rfc864Tcp2Client {
             {
                 client.socket().setSoTimeout(1024);
             }
-            __Utils.readQuitAndClose(client);
+            __Utils.readQuitAndClose(true, client);
             for (final var dst = ByteBuffer.allocate(1); client.isOpen(); dst.position(0)) {
                 assert dst.remaining() == 1;
                 final var r = client.read(dst); // IOException

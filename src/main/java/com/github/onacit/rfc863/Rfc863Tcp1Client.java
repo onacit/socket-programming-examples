@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ class Rfc863Tcp1Client {
             assert !client.isConnected();
             client.connect(_Constants.SERVER_ENDPOINT);
             assert client.isConnected();
-            log.debug("connected to {} through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
+            log.debug("connected to {}, through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
             {
                 client.shutdownInput(); // ???
                 try {
@@ -25,7 +26,7 @@ class Rfc863Tcp1Client {
                     // expected
                 }
             }
-            _Utils.readQuitAndClose(client);
+            __Utils.readQuitAndClose(true, client);
             while (!client.isClosed()) {
                 client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // [0..255]
                 Thread.sleep(Duration.ofMillis(ThreadLocalRandom.current().nextInt(1024)));

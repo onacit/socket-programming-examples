@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -34,11 +35,11 @@ class Rfc863Tcp1Server {
             }
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // :::20009
             log.info("bound to {}", server.getLocalSocketAddress());
-            _Utils.readQuitAndClose(server);
+            __Utils.readQuitAndClose(true, server);
             while (!server.isClosed()) {
                 final Socket client;
                 try {
-                    client = server.accept();
+                    client = server.accept(); // IOException
                     log.debug("accepted from {}", client.getRemoteSocketAddress());
                 } catch (final IOException ioe) {
                     if (!server.isClosed()) {
@@ -48,7 +49,7 @@ class Rfc863Tcp1Server {
                 }
                 executor.submit(() -> {
                     try {
-                        for (int r; (r = client.getInputStream().read()) != -1 && !server.isClosed(); ) {
+                        for (int r; (r = client.getInputStream().read()) != -1 && !server.isClosed(); ) { // IOException
                             log.debug("discarding {} received from {}", String.format("0x%1$02x", r),
                                       client.getRemoteSocketAddress());
                         }

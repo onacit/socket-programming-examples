@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 })
 public final class __Utils {
 
+
     static void readQuit(final BufferedReader reader) throws IOException {
         Objects.requireNonNull(reader, "reader is null");
         for (String l; (l = reader.readLine()) != null; ) {
@@ -46,17 +47,17 @@ public final class __Utils {
      * Keep reading lines from the {@link System#in standard input stream} until it reads a line contains {@code quit},
      * and {@link Callable#call() calls} specified task.
      *
+     * @param daemon
      * @param callable the task to {@link Callable#call() call}.
      */
-    public static void readQuitAndCall(final Callable<?> callable) {
+    public static void readQuitAndCall(final boolean daemon, final Callable<?> callable) {
         Objects.requireNonNull(callable, "callable is null");
-        Thread.ofPlatform().name("read-quit-and-call").start(() -> {
+        Thread.ofPlatform().name("read-quit-and-call").daemon(daemon).start(() -> {
             try {
                 readQuit();
             } catch (final IOException ioe) {
                 log.error("failed to read quit", ioe);
             } finally {
-                log.debug("calling {}", callable);
                 try {
                     callable.call();
                 } catch (final Exception e) {
@@ -70,37 +71,45 @@ public final class __Utils {
      * Keep reading lines from the {@link System#in standard input stream} until it reads a line contains {@code quit},
      * and {@link Runnable#run() runs} specified task.
      *
+     * @param daemon
      * @param runnable the task to {@link Runnable#run() run}.
-     * @see #readQuitAndCall(Callable)
+     * @see #readQuitAndCall(boolean, Callable)
      */
-    static void readQuitAndRun(final Runnable runnable) {
+    public static void readQuitAndRun(final boolean daemon, final Runnable runnable) {
         Objects.requireNonNull(runnable, "runnable is null");
-        readQuitAndCall(() -> {
-            log.debug("running {}", runnable);
-            runnable.run();
-            return null;
-        });
+        readQuitAndCall(
+                daemon,
+                () -> {
+                    runnable.run();
+                    return null;
+                }
+        );
     }
 
     /**
      * Keep reading lines from the {@link System#in standard input stream} until it reads a line contains {@code quit},
      * and {@link Closeable#close() closes} specified closeable.
      *
+     * @param daemon    a flag for starting the thread as s daemon; {@code true} for {@code daemon}; {@code false}
+     *                  otherwise.
      * @param closeable the closeable to {@link Closeable#close() close}.
-     * @see #readQuitAndCall(Callable)
+     * @see #readQuitAndCall(boolean, Callable)
      * @see Closeable#close()
      */
-    public static void readQuitAndClose(final Closeable closeable) {
+    public static void readQuitAndClose(final boolean daemon, final Closeable closeable) {
         Objects.requireNonNull(closeable, "closeable is null");
-        readQuitAndCall(() -> {
-            log.debug("closing {}", closeable);
-            closeable.close();
-            return null;
-        });
+        readQuitAndCall(
+                daemon,
+                () -> {
+                    log.debug("closing {}", closeable);
+                    closeable.close();
+                    return null;
+                }
+        );
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    static void acceptCommandAndClasspath(final BiConsumer<? super String, ? super String> consumer) {
+    public static void acceptCommandAndClasspath(final BiConsumer<? super String, ? super String> consumer) {
         Objects.requireNonNull(consumer, "consumer is null");
         final var info = ProcessHandle.current().info();
         final var command = info.command().orElseThrow();

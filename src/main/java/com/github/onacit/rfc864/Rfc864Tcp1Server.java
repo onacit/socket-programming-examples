@@ -37,7 +37,7 @@ class Rfc864Tcp1Server {
             }
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalSocketAddress());
-            __Utils.readQuitAndClose(server);
+            __Utils.readQuitAndClose(true, server);
             while (!server.isClosed()) {
                 final Socket client;
                 try {

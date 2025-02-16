@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -7,17 +8,18 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-class Rfc863UdpServer {
+class Rfc863TcpAllServers {
 
     public static void main(final String... args) {
         final var classes = List.of(
-                Rfc863Udp1Server.class,
-                Rfc863Udp2Server.class,
-                Rfc863Udp3Server.class
+                Rfc863Tcp1Server.class,
+                Rfc863Tcp2Server.class,
+                Rfc863Tcp3Server.class,
+                Rfc863Tcp4Server.class
         );
-        _Utils.acceptCommandAndClasspath((command, classpath) -> {
+        __Utils.acceptCommandAndClasspath((cmd, cp) -> {
             final var processes = classes.stream()
-                    .map(c -> new ProcessBuilder(command, "-cp", classpath, c.getName())
+                    .map(c -> new ProcessBuilder(cmd, "-cp", cp, c.getName())
                             .redirectOutput(ProcessBuilder.Redirect.INHERIT))
                     .map(b -> {
                         try {
@@ -30,18 +32,18 @@ class Rfc863UdpServer {
                         log.debug("process: {}", p.info());
                     })
                     .toList();
-            _Utils.readQuitAndRun(() -> {
+            __Utils.readQuitAndRun(false, () -> {
                 processes.forEach(p -> {
                     try {
-                        p.getOutputStream().write("quit\r\n".getBytes());
-                        p.getOutputStream().flush();
+                        p.getOutputStream().write("quit\r\n".getBytes()); // IOException
+                        p.getOutputStream().flush(); // IOException
                     } catch (final IOException ioe) {
-                        throw new RuntimeException("failed to write quit to " + p, ioe);
+                        throw new RuntimeException("failed to write/flush 'quit' to " + p, ioe);
                     }
                 });
                 processes.forEach(p -> {
                     try {
-                        final var exited = p.waitFor(10L, TimeUnit.SECONDS);
+                        final var exited = p.waitFor(10L, TimeUnit.SECONDS); // InterruptedException
                         assert exited;
                         log.debug("process: {}", p);
                     } catch (final InterruptedException ie) {

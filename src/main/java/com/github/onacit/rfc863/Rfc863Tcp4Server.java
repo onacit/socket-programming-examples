@@ -1,5 +1,6 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -31,7 +32,7 @@ class Rfc863Tcp4Server {
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalAddress());
             final var latch = new CountDownLatch(1);
-            _Utils.readQuitAndRun(latch::countDown);
+            __Utils.readQuitAndRun(false, latch::countDown);
             server.accept( // @formatter:off
                     null,                       // <attachment>
                     new CompletionHandler<>() { // <handler>

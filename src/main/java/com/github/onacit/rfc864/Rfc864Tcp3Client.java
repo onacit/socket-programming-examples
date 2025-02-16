@@ -25,7 +25,7 @@ class Rfc864Tcp3Client {
             } else {
                 clientKey = client.register(selector, SelectionKey.OP_CONNECT); // ClosedChannelException
             }
-            __Utils.readQuitAndCall(() -> {
+            __Utils.readQuitAndCall(true, () -> {
                 clientKey.cancel();
                 assert !clientKey.isValid();
                 selector.wakeup();

@@ -1,11 +1,11 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.Executors;
@@ -35,13 +35,16 @@ class Rfc863Tcp2Server {
             }
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalAddress());
-            _Utils.readQuitAndClose(server);
+            __Utils.readQuitAndClose(true, server);
             while (server.isOpen()) {
                 final SocketChannel client;
                 try {
-                    client = server.accept(); // non-blocking mode -> blocking call
-                } catch (final AsynchronousCloseException acc) {
-                    assert !server.isOpen();
+                    client = server.accept(); // will block indefinitely
+                } catch (final Exception e) {
+                    if (server.isOpen()) {
+                        log.error("failed to accept", e);
+                    }
+                    server.close();
                     continue;
                 }
                 log.debug("accepted from {}", client.getRemoteAddress()); // ClosedChannelException, IOException
