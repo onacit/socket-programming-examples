@@ -17,6 +17,7 @@ class Rfc863UdpAllServers {
                 Rfc863Udp3Server.class
         );
         __Utils.acceptCommandAndClasspath((cmd, cp) -> {
+            // start all processes
             final var processes = classes.stream()
                     .map(c -> new ProcessBuilder(cmd, "-cp", cp, c.getName())
                             .redirectOutput(ProcessBuilder.Redirect.INHERIT))
@@ -31,7 +32,9 @@ class Rfc863UdpAllServers {
                         log.debug("process: {}", p.info());
                     })
                     .toList();
+            // read 'quit' and kill all processes
             __Utils.readQuitAndRun(false, () -> {
+                // write 'quit\r\n' to each process
                 processes.forEach(p -> {
                     try {
                         p.getOutputStream().write("quit\r\n".getBytes());
@@ -40,6 +43,7 @@ class Rfc863UdpAllServers {
                         throw new RuntimeException("failed to write quit to " + p, ioe);
                     }
                 });
+                // wait for each process to exit
                 processes.forEach(p -> {
                     try {
                         final var exited = p.waitFor(10L, TimeUnit.SECONDS);

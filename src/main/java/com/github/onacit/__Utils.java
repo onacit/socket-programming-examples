@@ -112,7 +112,6 @@ public final class __Utils {
         Objects.requireNonNull(consumer, "consumer is null");
         final var info = ProcessHandle.current().info();
         final var command = info.command().orElseThrow();
-        log.debug("command: {}", command);
         final String classpath;
         {
             String cp = null;
@@ -123,9 +122,8 @@ public final class __Utils {
                     break;
                 }
             }
-            classpath = cp;
+            classpath = Optional.ofNullable(cp).orElse(".");
         }
-        log.debug("classpath: {}", Optional.ofNullable(classpath).orElseThrow());
         consumer.accept(command, classpath);
     }
 
