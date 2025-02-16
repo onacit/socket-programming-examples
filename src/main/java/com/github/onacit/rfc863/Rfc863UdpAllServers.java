@@ -16,9 +16,9 @@ class Rfc863UdpAllServers {
                 Rfc863Udp2Server.class,
                 Rfc863Udp3Server.class
         );
-        __Utils.acceptCommandAndClasspath((command, classpath) -> {
+        __Utils.acceptCommandAndClasspath((cmd, cp) -> {
             final var processes = classes.stream()
-                    .map(c -> new ProcessBuilder(command, "-cp", classpath, c.getName())
+                    .map(c -> new ProcessBuilder(cmd, "-cp", cp, c.getName())
                             .redirectOutput(ProcessBuilder.Redirect.INHERIT))
                     .map(b -> {
                         try {
