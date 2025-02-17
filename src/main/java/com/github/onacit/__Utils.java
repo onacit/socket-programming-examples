@@ -100,7 +100,6 @@ public final class __Utils {
         readQuitAndCall(
                 daemon,
                 () -> {
-                    log.debug("closing {}", closeable);
                     closeable.close();
                     return null;
                 }

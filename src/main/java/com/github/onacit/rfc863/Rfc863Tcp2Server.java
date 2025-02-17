@@ -39,15 +39,15 @@ class Rfc863Tcp2Server {
             while (server.isOpen()) {
                 final SocketChannel client;
                 try {
-                    client = server.accept(); // will block indefinitely
-                } catch (final Exception e) {
+                    client = server.accept(); // IOException
+                } catch (final IOException e) {
                     if (server.isOpen()) {
                         log.error("failed to accept", e);
                     }
-                    server.close();
+                    server.close(); // IOException
                     continue;
                 }
-                log.debug("accepted from {}", client.getRemoteAddress()); // ClosedChannelException, IOException
+                log.debug("accepted from {}", client.getRemoteAddress()); // IOException
                 executor.submit(() -> {
                     try {
                         final var dst = ByteBuffer.allocate(1);
