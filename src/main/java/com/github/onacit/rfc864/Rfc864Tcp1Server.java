@@ -8,7 +8,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.StandardSocketOptions;
-import java.nio.ByteBuffer;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -16,7 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
 class Rfc864Tcp1Server {
 
     public static void main(final String... args) throws IOException {
-        try (var executor = Executors.newVirtualThreadPerTaskExecutor();
+        try (var executor = Executors.newCachedThreadPool();
              var server = new ServerSocket()) {
             {
                 try {
@@ -41,50 +40,28 @@ class Rfc864Tcp1Server {
             while (!server.isClosed()) {
                 final Socket client;
                 try {
-                    client = server.accept(); // blocking-call
+                    client = server.accept(); // IOException
                 } catch (final IOException ioe) {
-                    if (!server.isClosed()) {
-                        log.error("failed to accept", ioe);
-                    }
-                    continue;
+                    server.close();
+                    throw ioe;
                 }
                 executor.submit(() -> {
                     try {
                         log.debug("accepted from {}", client.getRemoteSocketAddress());
                         client.shutdownInput(); // IOException
-                        if (true) {
-                            final var buffer = ByteBuffer.allocate(2).flip();
-                            assert buffer.position() == 0;
-                            assert buffer.limit() == 0;
-                            assert !buffer.hasRemaining();
-                            final var generator = _Utils.newPatternGenerator();
-                            while (!server.isClosed()) {
-                                for (generator.generate(buffer.compact()).flip(); buffer.hasRemaining(); ) {
-                                    client.getOutputStream().write(buffer.get());
-                                }
-                                Thread.sleep(ThreadLocalRandom.current().nextInt(128)); // InterruptedException
+                        final var generator = _Utils.newPatternGenerator();
+                        while (!server.isClosed()) {
+                            for (final var b = generator.buffer(); b.hasRemaining(); ) {
+                                client.getOutputStream().write(b.get());
                             }
+                            Thread.sleep(ThreadLocalRandom.current().nextInt(128)); // InterruptedException
                         }
-//                        final var buffer = _Utils.newBuffer();
-//                        for (int i = 0, j = 0; !server.isClosed(); ) {
-//                            if (!buffer.hasRemaining()) {
-//                                buffer.position(0);
-//                            }
-//                            client.getOutputStream().write(buffer.get()); // IOException
-//                            if (++i == 72) {
-//                                client.getOutputStream().write('\r'); // CR; IOException
-//                                client.getOutputStream().write('\n'); // LF; IOException
-//                                i = 0;
-//                                buffer.position(++j % buffer.capacity());
-//                            }
-//                            Thread.sleep(ThreadLocalRandom.current().nextInt(128)); // InterruptedException
-//                        }
                     } finally {
                         client.close();
                     }
                     return null;
                 });
-            }
-        }
+            } // end-of-accept-submit-loop
+        } // end-of-try-with-resources
     }
 }

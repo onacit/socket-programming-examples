@@ -17,14 +17,12 @@ class Rfc864Tcp1Client {
             log.debug("connected to {} through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
             client.shutdownOutput(); // IOException
             {
-                client.setSoTimeout(1024); // SocketException
+//                client.setSoTimeout(1024); // SocketException
             }
             __Utils.readQuitAndClose(true, client);
-            for (int r; !client.isClosed(); ) {
-                while ((r = client.getInputStream().read()) != -1) { // IOException
-                    System.out.print((char) r);
-                }
-            }
-        }
+            for (int r; (r = client.getInputStream().read()) != -1; ) {
+                System.out.print((char) r);
+            } // end-of-for-loop
+        } // end-of-try-with-resources
     }
 }

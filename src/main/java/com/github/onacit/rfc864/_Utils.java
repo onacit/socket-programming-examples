@@ -16,37 +16,93 @@ final class _Utils {
     ).asReadOnlyBuffer();
 
     static ByteBuffer newBuffer() {
-        final var buffer = BUFFER.slice().asReadOnlyBuffer();
+        final var buffer = BUFFER.slice();
         assert buffer.position() == 0;
         assert buffer.limit() == buffer.capacity();
         return buffer;
     }
 
     static _Generator newPatternGenerator() {
-        final var buffer = _Utils.newBuffer();
+        final var buffer = BUFFER.slice();
         final var indices = new int[]{0, 1};
-        return dst -> {
-            if (indices[0] == 72) {
-                if (dst.remaining() < 2) {
-                    return dst;
+        final var dst = ByteBuffer.allocate(3).flip();
+        return new _Generator() {
+            @Override
+            public ByteBuffer generate(ByteBuffer dst) {
+                if (indices[0] == 72) {
+                    if (dst.remaining() < 2) {
+                        return dst;
+                    }
+                    dst.put((byte) 0x0D).put((byte) 0x0A); // CR LF
+                    indices[0] = 0;
+                    buffer.position(indices[1]++);
+                    if (indices[1] == buffer.capacity()) {
+                        indices[1] = 0;
+                    }
                 }
-                dst.put((byte) 0x0D).put((byte) 0x0A); // CR LF
-                indices[0] = 0;
-                buffer.position(indices[1]++);
-                if (indices[1] == buffer.capacity()) {
-                    indices[1] = 0;
+                while (dst.hasRemaining()) {
+                    if (!buffer.hasRemaining()) {
+                        buffer.position(0);
+                    }
+                    dst.put(buffer.get());
+                    if (++indices[0] == 72) {
+                        break;
+                    }
                 }
+                return dst;
             }
-            while (dst.hasRemaining()) {
-                if (!buffer.hasRemaining()) {
-                    buffer.position(0);
+
+            @Override
+            public _Generator generate() {
+                dst.compact();
+                if (indices[0] == 72) {
+                    if (dst.remaining() < 2) {
+                        return this;
+                    }
+                    dst.put((byte) 0x0D).put((byte) 0x0A); // CR LF
+                    indices[0] = 0;
+                    buffer.position(indices[1]++);
+                    if (indices[1] == buffer.capacity()) {
+                        indices[1] = 0;
+                    }
                 }
-                dst.put(buffer.get());
-                if (++indices[0] == 72) {
-                    break;
+                while (dst.hasRemaining()) {
+                    if (!buffer.hasRemaining()) {
+                        buffer.position(0);
+                    }
+                    dst.put(buffer.get());
+                    if (++indices[0] == 72) {
+                        break;
+                    }
                 }
+                return this;
             }
-            return dst;
+
+            @Override
+            public ByteBuffer buffer() {
+                dst.compact();
+                if (indices[0] == 72) {
+                    if (dst.remaining() < 2) {
+                        return buffer.flip();
+                    }
+                    dst.put((byte) 0x0D).put((byte) 0x0A); // CR LF
+                    indices[0] = 0;
+                    buffer.position(indices[1]++);
+                    if (indices[1] == buffer.capacity()) {
+                        indices[1] = 0;
+                    }
+                }
+                while (dst.hasRemaining()) {
+                    if (!buffer.hasRemaining()) {
+                        buffer.position(0);
+                    }
+                    dst.put(buffer.get());
+                    if (++indices[0] == 72) {
+                        break;
+                    }
+                }
+                return dst.flip();
+            }
         };
     }
 

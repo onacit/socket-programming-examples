@@ -38,7 +38,7 @@ class Rfc864Tcp2Server {
             log.info("bound to {}", server.getLocalAddress());
             __Utils.readQuitAndClose(true, server);
             while (server.isOpen()) {
-                final var client = server.accept(); // will block indefinitely; IOException
+                final var client = server.accept(); // IOException
                 executor.submit(() -> {
                     try {
                         log.debug("accepted from {}", client.getRemoteAddress()); // IOException

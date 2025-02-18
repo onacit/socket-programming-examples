@@ -5,4 +5,8 @@ import java.nio.ByteBuffer;
 interface _Generator {
 
     ByteBuffer generate(ByteBuffer dst);
+
+    _Generator generate();
+
+    ByteBuffer buffer();
 }
