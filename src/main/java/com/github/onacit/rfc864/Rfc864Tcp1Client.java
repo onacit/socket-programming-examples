@@ -11,18 +11,17 @@ class Rfc864Tcp1Client {
 
     public static void main(final String... args) throws IOException {
         try (var client = new Socket()) {
+            assert !client.isBound();
             assert !client.isConnected();
             client.connect(_Constants.SERVER_ENDPOINT);
+            assert client.isBound();
             assert client.isConnected();
             log.debug("connected to {} through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
             client.shutdownOutput(); // IOException
-            {
-//                client.setSoTimeout(1024); // SocketException
-            }
             __Utils.readQuitAndClose(true, client);
-            for (int r; (r = client.getInputStream().read()) != -1; ) {
+            for (int r; (r = client.getInputStream().read()) != -1; ) { // IOException
                 System.out.print((char) r);
-            } // end-of-for-loop
-        } // end-of-try-with-resources
+            }
+        }
     }
 }
