@@ -19,13 +19,13 @@ class Rfc863Tcp1Server {
             {
                 try {
                     server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE);
-                } catch (final Exception e) {
-                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, e);
+                } catch (final UnsupportedOperationException uoe) {
+                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, uoe);
                 }
                 try {
                     server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE);
-                } catch (final Exception e) {
-                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, e);
+                } catch (final UnsupportedOperationException uoe) {
+                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, uoe);
                 }
                 try {
                     server.setReuseAddress(true);

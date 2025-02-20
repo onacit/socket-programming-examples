@@ -12,13 +12,15 @@ class Rfc863Tcp1Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = new Socket()) {
+            assert !client.isBound();
             assert !client.isConnected();
             client.connect(_Constants.SERVER_ENDPOINT); // IOException
+            assert client.isBound();
             assert client.isConnected();
             log.debug("connected to {}, through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
             {
                 client.shutdownInput(); // IOException
-                try {
+                try { // TODO: remove
                     client.getInputStream().read();
                     throw new AssertionError("should not reach here");
                 } catch (final IOException ioe) {
