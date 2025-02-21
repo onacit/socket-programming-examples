@@ -7,6 +7,11 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * A minimal TCP client that connects to a server and sends a random byte to it.
+ *
+ * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
+ */
 @Slf4j
 class Rfc863Tcp1Client {
 
@@ -21,16 +26,16 @@ class Rfc863Tcp1Client {
             {
                 client.shutdownInput(); // IOException
                 try { // TODO: remove
-                    client.getInputStream().read();
-                    throw new AssertionError("should not reach here");
+                    client.getInputStream().read(); // IOException
+                    throw new AssertionError("shouldn't be here");
                 } catch (final IOException ioe) {
                     // expected
                 }
             }
             __Utils.readQuitAndClose(true, client);
             while (!client.isClosed()) {
-                client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // [0..255] // IOException
-                Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
+                client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // IOException
+                Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
             }
         }
     }
