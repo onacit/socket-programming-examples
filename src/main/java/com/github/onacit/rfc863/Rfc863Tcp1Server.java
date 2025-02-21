@@ -48,7 +48,6 @@ class Rfc863Tcp1Server {
                 executor.submit(() -> {
                     try {
                         log.debug("accepted from {}", client.getRemoteSocketAddress());
-                        final var formatter = new Formatter()String.format("0x%1$02x", ThreadLocalRandom.current().nextInt(256));
                         for (int r; (r = client.getInputStream().read()) != -1 && !server.isClosed(); ) { // IOException
                             log.debug("discarding {} received from {}", String.format("0x%1$02x", r),
                                       client.getRemoteSocketAddress());
