@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 import java.util.concurrent.Executors;
 
 @Slf4j
@@ -33,29 +32,21 @@ class Rfc863Tcp2Server {
                     log.error("failed to set reuseAddress", e);
                 }
             }
+            assert server.socket().isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalAddress());
+            assert server.socket().isBound();
             __Utils.readQuitAndClose(true, server);
             while (server.isOpen()) {
-                final SocketChannel client;
-                try {
-                    client = server.accept(); // IOException
-                } catch (final IOException e) {
-                    if (server.isOpen()) {
-                        log.error("failed to accept", e);
-                    }
-                    server.close(); // IOException
-                    continue;
-                }
-                log.debug("accepted from {}", client.getRemoteAddress()); // IOException
+                final var client = server.accept(); // IOException
                 executor.submit(() -> {
                     try {
-                        final var dst = ByteBuffer.allocate(1);
-                        for (int r; (r = client.read(dst.clear())) != -1 && server.isOpen(); ) {
-                            assert r == 1;
+                        log.debug("accepted from {}", client.getRemoteAddress()); // IOException
+                        for (final var dst = ByteBuffer.allocate(1);
+                             server.isOpen() && client.read(dst.clear()) != -1; ) {
                             log.debug("discarding {} received from {}", String.format("0x%1$02x", dst.get(0)),
                                       client.getRemoteAddress());
-                        } // end-of-for
+                        }
                     } finally {
                         client.close();
                     }

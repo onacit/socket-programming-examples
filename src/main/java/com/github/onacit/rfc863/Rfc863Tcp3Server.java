@@ -4,6 +4,7 @@ import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -16,54 +17,56 @@ class Rfc863Tcp3Server {
              var server = ServerSocketChannel.open()) {
             {
                 try {
-                    server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE);
-                } catch (final Exception e) {
-                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, e);
+                    server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
+                } catch (final UnsupportedOperationException uoe) {
+                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, uoe);
                 }
                 try {
-                    server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE);
-                } catch (final Exception e) {
-                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, e);
+                    server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
+                } catch (final UnsupportedOperationException uoe) {
+                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, uoe);
                 }
-                server.socket().setReuseAddress(true);
+                server.socket().setReuseAddress(true); // SocketException
             }
+            assert server.socket().isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalAddress());
             assert server.isBlocking();
             server.configureBlocking(false); // IOException
-            final var serverKey = server.register(selector, SelectionKey.OP_ACCEPT); // ClosedChannelException
-            __Utils.readQuitAndCall(true, () -> {
+            final var serverKey = server.register(selector, SelectionKey.OP_ACCEPT);
+            __Utils.readQuitAndRun(true, () -> {
                 serverKey.cancel();
                 assert !serverKey.isValid();
                 selector.wakeup();
-                return null;
             });
             for (final var dst = ByteBuffer.allocate(1); serverKey.isValid(); ) {
                 final var count = selector.select(0); // IOException
                 assert count >= 0;
-                for (var i = selector.selectedKeys().iterator(); i.hasNext(); i.remove()) { // ClosedSelectorException
+                for (var i = selector.selectedKeys().iterator(); i.hasNext(); i.remove()) {
                     final var key = i.next();
                     final var channel = key.channel();
-                    if (key.isAcceptable()) { // CanceledKeyException
+                    if (key.isAcceptable()) {
                         assert channel == server;
                         final var client = ((ServerSocketChannel) channel).accept();
-                        log.debug("accepted from {}", client.getRemoteAddress()); // IOException
+                        log.debug("accepted from {}, through {}",
+                                  client.getRemoteAddress(), // IOException
+                                  client.getLocalAddress() // IOException
+                        );
                         assert client.isBlocking();
                         client.configureBlocking(false); // IOException
                         final var clientKey = client.register(selector, SelectionKey.OP_READ); // ClosedChannelException
                         clientKey.attach(client.getRemoteAddress()); // IOException
                     }
-                    if (key.isReadable()) { // CanceledKeyException
+                    if (key.isReadable()) {
                         assert channel instanceof SocketChannel;
                         final var attachment = key.attachment();
-                        assert attachment != null;
+                        assert attachment instanceof SocketAddress;
                         final var r = ((ReadableByteChannel) channel).read(dst.clear()); // IOException
                         if (r == -1) {
                             key.cancel();
                             assert !key.isValid();
                             continue;
                         }
-                        assert r >= 0;
                         assert r > 0; // why?
                         log.debug("discarding {} received from {}", String.format("0x%1$02x", dst.get(0)), attachment);
                     }

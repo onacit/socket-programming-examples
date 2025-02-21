@@ -16,6 +16,7 @@ class Rfc863Tcp3Client {
     public static void main(final String... args) throws IOException {
         try (var selector = Selector.open();
              var client = SocketChannel.open()) {
+            assert client.isBlocking();
             client.configureBlocking(false);
             final SelectionKey clientKey;
             if (client.connect(_Constants.SERVER_ENDPOINT)) {
@@ -31,48 +32,47 @@ class Rfc863Tcp3Client {
                 return null;
             });
             for (final var src = ByteBuffer.allocate(1); clientKey.isValid(); ) {
-                final var count = selector.select(0L); // a blocking call; may be awaken by .wakeup()
+                final var count = selector.select(0L); // IOException
                 assert count >= 0; // why not 1?
                 for (final var i = selector.selectedKeys().iterator(); i.hasNext(); i.remove()) {
                     final var key = i.next();
                     assert key == clientKey;
                     final var channel = key.channel();
                     assert channel == client;
-                    if (key.isConnectable()) { // CanceledKeyException
+                    if (key.isConnectable()) {
                         if (!client.finishConnect()) { // IOException
                             log.error("failed to finish connecting");
                             key.cancel();
-                            break;
-                        } else {
-                            log.debug("connected to {}, through {}", client.getRemoteAddress(),
-                                      client.getLocalAddress());
-                            key.interestOpsAnd(~SelectionKey.OP_CONNECT);
-                            Thread.ofVirtual().start(() -> {
-                                assert Thread.currentThread().isDaemon();
-                                while (!Thread.currentThread().isInterrupted() && key.isValid()) {
-                                    key.interestOps(SelectionKey.OP_WRITE); // CanceledKeyException
-                                    selector.wakeup();
-                                    try {
-                                        Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
-                                    } catch (final InterruptedException ie) {
-                                        Thread.currentThread().interrupt();
-                                        key.cancel();
-                                        selector.wakeup();
-                                    }
-                                }
-                            });
+                            continue;
                         }
-                    } else if (key.isWritable()) { // almost always true; CanceledKeyException
+                        log.debug("connected to {}, through {}",
+                                  client.getRemoteAddress(), // IOException
+                                  client.getLocalAddress() // IOException
+                        );
+                        key.interestOpsAnd(~SelectionKey.OP_CONNECT);
+                        Thread.ofVirtual().start(() -> {
+                            assert Thread.currentThread().isDaemon();
+                            while (!Thread.currentThread().isInterrupted() && key.isValid()) {
+                                key.interestOps(SelectionKey.OP_WRITE);
+                                selector.wakeup();
+                                try {
+                                    Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
+                                } catch (final InterruptedException ie) {
+                                    Thread.currentThread().interrupt();
+                                    key.cancel();
+                                    selector.wakeup();
+                                }
+                            }
+                        });
+                    } else if (key.isWritable()) {
                         ThreadLocalRandom.current().nextBytes(src.array());
                         final var w = client.write(src.clear()); // IOException
                         assert w == 1; // why?
                         key.interestOpsAnd(~SelectionKey.OP_WRITE);
-//                        Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // DO NOT DO THIS!!!
+//                        Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
                     }
-                }
-            }
-            log.debug("out of for-loop");
-        }
-        log.debug("out-of-try-with-resources");
+                } // end-of-selected-keys-iteration
+            } // end-of-main-for-loop
+        } // end-of-try-with-resources
     }
 }

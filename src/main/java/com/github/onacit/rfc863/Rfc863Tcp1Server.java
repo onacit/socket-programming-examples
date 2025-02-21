@@ -9,10 +9,9 @@ import java.net.SocketException;
 import java.net.StandardSocketOptions;
 import java.util.Formatter;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * A minimal TCP server that accepts a connection from a client and sends a random byte to it.
+ * A minimal TCP server that discards bytes received from clients.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
