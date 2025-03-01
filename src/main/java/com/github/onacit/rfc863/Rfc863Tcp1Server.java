@@ -5,9 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.SocketException;
 import java.net.StandardSocketOptions;
-import java.util.Formatter;
 import java.util.concurrent.Executors;
 
 /**
@@ -33,14 +31,11 @@ class Rfc863Tcp1Server {
                 } catch (final UnsupportedOperationException uoe) {
                     log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, uoe);
                 }
-                try {
-                    server.setReuseAddress(true); // SocketException
-                } catch (final SocketException se) {
-                    log.error("failed to set reuseAddress", se);
-                }
+                server.setReuseAddress(true); // SocketException
             }
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException
             log.info("bound to {}", server.getLocalSocketAddress());
+            assert server.isBound();
             __Utils.readQuitAndClose(true, server);
             while (!server.isClosed()) {
                 final var client = server.accept(); // IOException

@@ -43,10 +43,11 @@ public final class __Utils {
     }
 
     /**
-     * Keep reading lines from the {@link System#in standard input stream} until it reads a line contains {@code quit},
-     * and {@link Callable#call() calls} specified task.
+     * Starts a new thread which keeps reading lines from the {@link System#in standard input stream} until it reads a
+     * line contains (case-insensitively) '{@code quit}, and {@link Callable#call() calls} specified task.
      *
-     * @param daemon
+     * @param daemon   a flag for starting the thread as s daemon; {@code true} for {@code daemon}; {@code false}
+     *                 otherwise.
      * @param callable the task to {@link Callable#call() call}.
      */
     public static void readQuitAndCall(final boolean daemon, final Callable<?> callable) {
@@ -67,10 +68,11 @@ public final class __Utils {
     }
 
     /**
-     * Keep reading lines from the {@link System#in standard input stream} until it reads a line contains {@code quit},
-     * and {@link Runnable#run() runs} specified task.
+     * Starts a new thread which keeps reading lines from the {@link System#in standard input stream} until it reads a
+     * line contains (case-insensitively) '{@code quit}', and {@link Runnable#run() runs} specified task.
      *
-     * @param daemon
+     * @param daemon   a flag for starting the thread as s daemon; {@code true} for {@code daemon}; {@code false}
+     *                 otherwise.
      * @param runnable the task to {@link Runnable#run() run}.
      * @see #readQuitAndCall(boolean, Callable)
      */
@@ -86,8 +88,8 @@ public final class __Utils {
     }
 
     /**
-     * Keep reading lines from the {@link System#in standard input stream} until it reads a line contains {@code quit},
-     * and {@link Closeable#close() closes} specified closeable.
+     * Starts a new thread which keeps reading lines from the {@link System#in standard input stream} until it reads a
+     * line contains (case-insensitively) '{@code quit}', and {@link Closeable#close() closes} specified closeable.
      *
      * @param daemon    a flag for starting the thread as s daemon; {@code true} for {@code daemon}; {@code false}
      *                  otherwise.
