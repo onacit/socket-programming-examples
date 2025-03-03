@@ -28,12 +28,19 @@ class Rfc863Tcp3Server {
                 }
                 server.socket().setReuseAddress(true); // SocketException
             }
-            assert server.socket().isBound();
-            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
-            log.info("bound to {}", server.getLocalAddress());
-            assert server.isBlocking();
-            server.configureBlocking(false); // IOException
-            final var serverKey = server.register(selector, SelectionKey.OP_ACCEPT);
+            {
+                assert server.socket().isBound();
+                server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
+                log.info("bound to {}", server.getLocalAddress());
+                assert server.isBlocking();
+            }
+            final SelectionKey serverKey;
+            {
+                assert server.isBlocking();
+                server.configureBlocking(false); // IOException
+                assert !server.isBlocking();
+                serverKey = server.register(selector, SelectionKey.OP_ACCEPT); // ClosedChannelException
+            }
             __Utils.readQuitAndRun(true, () -> {
                 serverKey.cancel();
                 assert !serverKey.isValid();
@@ -68,7 +75,7 @@ class Rfc863Tcp3Server {
                             continue;
                         }
                         assert r > 0; // why?
-                        log.debug("discarding {} received from {}", String.format("0x%1$02x", dst.get(0)), attachment);
+                        log.debug("discarding {} received from {}", String.format("0x%1$02X", dst.get(0)), attachment);
                     }
                 }
             }

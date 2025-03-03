@@ -44,7 +44,7 @@ class Rfc863Tcp2Server {
                         log.debug("accepted from {}", client.getRemoteAddress()); // IOException
                         for (final var dst = ByteBuffer.allocate(1);
                              server.isOpen() && client.read(dst.clear()) != -1; ) {
-                            log.debug("discarding {} received from {}", String.format("0x%1$02x", dst.get(0)),
+                            log.debug("discarding {} received from {}", String.format("0x%1$02X", dst.get(0)),
                                       client.getRemoteAddress());
                         }
                     } finally {
