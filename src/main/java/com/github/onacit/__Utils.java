@@ -126,6 +126,8 @@ public final class __Utils {
             }
             classpath = Optional.ofNullable(cp).orElse(".");
         }
+        log.debug("command: {}", command);
+        log.debug("classpath: {}", classpath);
         consumer.accept(command, classpath);
     }
 
