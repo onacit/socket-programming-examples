@@ -15,7 +15,6 @@ class Rfc863Tcp2Client {
         try (var client = SocketChannel.open()) {
             assert !client.socket().isBound();
             assert !client.isConnected();
-            client.socket().setSoTimeout(1024); // SocketException
             final var connected = client.connect(_Constants.SERVER_ENDPOINT);
             assert connected;
             assert client.socket().isBound();
@@ -23,9 +22,11 @@ class Rfc863Tcp2Client {
             log.debug("connected to {}, through {}", client.getRemoteAddress(), client.getLocalAddress());
             __Utils.readQuitAndClose(true, client);
             for (final var src = ByteBuffer.allocate(1); client.isOpen(); ) {
-                ThreadLocalRandom.current().nextBytes(src.array());
-                final var w = client.write(src.clear()); // IOException
+                ThreadLocalRandom.current().nextBytes(src.clear().array());
+                assert src.hasRemaining();
+                final var w = client.write(src); // IOException
                 assert w >= 0; // why?
+                assert !src.hasRemaining(); // why?
                 Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
             }
         }
