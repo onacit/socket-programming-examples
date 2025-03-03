@@ -17,20 +17,16 @@ class Rfc863Tcp2Server {
              var server = ServerSocketChannel.open()) {
             {
                 try {
-                    server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE);
-                } catch (final Exception e) {
-                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, e);
+                    server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
+                } catch (final UnsupportedOperationException uoe) {
+                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, uoe);
                 }
                 try {
-                    server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE);
-                } catch (final Exception e) {
-                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, e);
+                    server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
+                } catch (final UnsupportedOperationException uoe) {
+                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, uoe);
                 }
-                try {
-                    server.socket().setReuseAddress(true);
-                } catch (final Exception e) {
-                    log.error("failed to set reuseAddress", e);
-                }
+                server.socket().setReuseAddress(true); // SocketException
             }
             assert server.socket().isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);

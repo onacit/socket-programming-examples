@@ -109,6 +109,7 @@ public final class __Utils {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
+    // https://stackoverflow.com/a/54790608/330457
     public static void acceptCommandAndClasspath(final BiConsumer<? super String, ? super String> consumer) {
         Objects.requireNonNull(consumer, "consumer is null");
         final var info = ProcessHandle.current().info();
