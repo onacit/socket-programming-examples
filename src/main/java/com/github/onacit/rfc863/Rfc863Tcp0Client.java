@@ -16,11 +16,7 @@ class Rfc863Tcp0Client {
 
     public static void main(final String... args) throws IOException {
         try (var client = new Socket()) {
-            assert !client.isBound();
-            assert !client.isConnected();
-            client.connect(_Constants.SERVER_ENDPOINT); // IOException
-            assert client.isBound();
-            assert client.isConnected();
+            client.connect(Rfc863Tcp0Server.ENDPOINT);
             log.debug("connected to {}, through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
             client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // IOException
         }
