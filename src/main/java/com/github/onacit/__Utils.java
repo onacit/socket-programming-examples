@@ -116,9 +116,10 @@ public final class __Utils {
         final String classpath;
         {
             String cp = null;
-            final var arguments = info.arguments().orElseThrow();
+            final var arguments = info.arguments().orElseGet(() -> new String[0]);
             for (int i = 0; i < arguments.length; i++) {
                 if (arguments[i].equals("-classpath")) {
+                    assert arguments.length >= i + 1;
                     cp = arguments[i + 1];
                     break;
                 }
