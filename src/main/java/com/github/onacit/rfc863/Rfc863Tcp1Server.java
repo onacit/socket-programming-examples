@@ -19,7 +19,6 @@ class Rfc863Tcp1Server {
     public static void main(final String... args) throws IOException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor();
              var server = new ServerSocket()) {
-            assert !server.isBound();
             {
                 try {
                     server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
@@ -33,10 +32,15 @@ class Rfc863Tcp1Server {
                 }
                 server.setReuseAddress(true); // SocketException
             }
-            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException
-            log.info("bound to {}", server.getLocalSocketAddress());
-            assert server.isBound();
-            __Utils.readQuitAndClose(true, server);
+            {
+                assert !server.isBound();
+                server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException
+                log.info("bound to {}", server.getLocalSocketAddress());
+                assert server.isBound();
+            }
+            {
+                __Utils.readQuitAndClose(true, server);
+            }
             while (!server.isClosed()) {
                 final var client = server.accept(); // IOException
                 executor.submit(() -> {

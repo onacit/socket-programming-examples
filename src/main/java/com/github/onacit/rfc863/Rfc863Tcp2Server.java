@@ -28,11 +28,15 @@ class Rfc863Tcp2Server {
                 }
                 server.socket().setReuseAddress(true); // SocketException
             }
-            assert server.socket().isBound();
-            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
-            log.info("bound to {}", server.getLocalAddress());
-            assert server.socket().isBound();
-            __Utils.readQuitAndClose(true, server);
+            {
+                assert !server.socket().isBound();
+                server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
+                log.info("bound to {}", server.getLocalAddress());
+                assert server.socket().isBound();
+            }
+            {
+                __Utils.readQuitAndClose(true, server);
+            }
             while (server.isOpen()) {
                 final var client = server.accept(); // IOException
                 executor.submit(() -> {
