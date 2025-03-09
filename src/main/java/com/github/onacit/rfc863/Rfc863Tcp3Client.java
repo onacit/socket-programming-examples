@@ -11,13 +11,16 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc863Tcp3Client {
+class Rfc863Tcp3Client extends _Rfc863Tcp_Client {
 
     public static void main(final String... args) throws IOException {
         try (var selector = Selector.open();
              var client = SocketChannel.open()) {
+
             assert client.isBlocking();
             client.configureBlocking(false);
+            assert !client.isBlocking();
+
             final SelectionKey clientKey;
             if (client.connect(_Constants.SERVER_ENDPOINT)) {
                 log.debug("connected to {}, through {}", client.getRemoteAddress(), client.getLocalAddress());
@@ -25,12 +28,14 @@ class Rfc863Tcp3Client {
             } else {
                 clientKey = client.register(selector, SelectionKey.OP_CONNECT);
             }
+
             __Utils.readQuitAndCall(true, () -> {
                 clientKey.cancel();
                 assert !clientKey.isValid();
                 selector.wakeup();
                 return null;
             });
+
             for (final var src = ByteBuffer.allocate(1); clientKey.isValid(); ) {
                 final var count = selector.select(0L); // IOException
                 assert count >= 0; // why not 1?
@@ -56,7 +61,7 @@ class Rfc863Tcp3Client {
                                 key.interestOps(SelectionKey.OP_WRITE);
                                 selector.wakeup();
                                 try {
-                                    Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
+                                    Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
                                 } catch (final InterruptedException ie) {
                                     Thread.currentThread().interrupt();
                                     key.cancel();
@@ -64,15 +69,16 @@ class Rfc863Tcp3Client {
                                 }
                             }
                         });
-                    } else if (key.isWritable()) {
+                    }
+                    if (key.isWritable()) {
                         ThreadLocalRandom.current().nextBytes(src.array());
                         final var w = client.write(src.clear()); // IOException
-                        assert w == 1; // why?
+                        assert w > 0; // why?
                         key.interestOpsAnd(~SelectionKey.OP_WRITE);
 //                        Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
                     }
-                } // end-of-selected-keys-iteration
-            } // end-of-main-for-loop
-        } // end-of-try-with-resources
+                }
+            }
+        }
     }
 }

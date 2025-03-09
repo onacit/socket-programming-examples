@@ -10,7 +10,7 @@ import java.nio.channels.DatagramChannel;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc863Udp2Client {
+class Rfc863Udp2Client extends _Rfc863Udp_Client {
 
     public static void main(final String... args) throws Exception {
         try (var client = DatagramChannel.open()) {

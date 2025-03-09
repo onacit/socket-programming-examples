@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 class Rfc863TcpAllClients {
@@ -15,7 +14,8 @@ class Rfc863TcpAllClients {
                 Rfc863Tcp1Client.class,
                 Rfc863Tcp2Client.class,
                 Rfc863Tcp3Client.class,
-                Rfc863Tcp4Client.class
+                Rfc863Tcp4Client.class,
+                Rfc863Tcp5Client.class
         );
         __Utils.acceptCommandAndClasspath((command, classpath) -> {
             final var processes = classes.stream()
@@ -32,7 +32,7 @@ class Rfc863TcpAllClients {
                         log.debug("process: {}", p.info());
                     })
                     .toList();
-            __Utils.readQuitAndRun(false, () -> {
+            __Utils.readQuitAndRun(true, () -> {
                 processes.forEach(p -> {
                     try {
                         p.getOutputStream().write("quit\r\n".getBytes());
@@ -41,16 +41,25 @@ class Rfc863TcpAllClients {
                         throw new RuntimeException("failed to write quit to " + p, ioe);
                     }
                 });
-                processes.forEach(p -> {
-                    try {
-                        final var exited = p.waitFor(10L, TimeUnit.SECONDS);
-                        assert exited;
-                        log.debug("process: {}", p);
-                    } catch (final InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException("interrupted while waiting for " + p, ie);
-                    }
-                });
+//                processes.forEach(p -> {
+//                    try {
+//                        final var exited = p.waitFor(10L, TimeUnit.SECONDS);
+//                        assert exited;
+//                        log.debug("process: {}", p);
+//                    } catch (final InterruptedException ie) {
+//                        Thread.currentThread().interrupt();
+//                        throw new RuntimeException("interrupted while waiting for " + p, ie);
+//                    }
+//                });
+            });
+            processes.forEach(p -> {
+                try {
+                    final var exitValue = p.waitFor(); // InterruptedException
+                    log.debug("exitValue: {}, process: {}", exitValue, p);
+                } catch (final InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("interrupted while waiting for " + p, ie);
+                }
             });
         });
     }

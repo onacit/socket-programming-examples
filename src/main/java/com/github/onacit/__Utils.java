@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 @Slf4j
 @SuppressWarnings({
@@ -110,8 +111,8 @@ public final class __Utils {
 
     // -----------------------------------------------------------------------------------------------------------------
     // https://stackoverflow.com/a/54790608/330457
-    public static void acceptCommandAndClasspath(final BiConsumer<? super String, ? super String> consumer) {
-        Objects.requireNonNull(consumer, "consumer is null");
+    public static <R> R applyCommandAndClasspath(final BiFunction<? super String, ? super String, ? extends R> function) {
+        Objects.requireNonNull(function, "function is null");
         final var info = ProcessHandle.current().info();
         final var command = info.command().orElseThrow();
         final String classpath;
@@ -127,9 +128,17 @@ public final class __Utils {
             }
             classpath = Optional.ofNullable(cp).orElse(".");
         }
-        log.debug("command: {}", command);
-        log.debug("classpath: {}", classpath);
-        consumer.accept(command, classpath);
+//        log.debug("command: {}", command);
+//        log.debug("classpath: {}", classpath);
+        return function.apply(command, classpath);
+    }
+
+    public static void acceptCommandAndClasspath(final BiConsumer<? super String, ? super String> consumer) {
+        Objects.requireNonNull(consumer, "consumer is null");
+        applyCommandAndClasspath((cmd, cp) -> {
+            consumer.accept(cmd, cp);
+            return null;
+        });
     }
 
     // -----------------------------------------------------------------------------------------------------------------

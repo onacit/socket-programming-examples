@@ -12,7 +12,7 @@ import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc863Udp3Client {
+class Rfc863Udp3Client extends _Rfc863Udp_Client {
 
     public static void main(final String... args) throws Exception {
         try (var selector = Selector.open();

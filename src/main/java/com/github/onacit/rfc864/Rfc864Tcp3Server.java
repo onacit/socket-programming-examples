@@ -80,7 +80,7 @@ class Rfc864Tcp3Server {
                         }
                         assert r >= 0;
                         assert r > 0; // why?
-                        log.debug("discarding {} received from {}", String.format("0x%1$02x", dst.get(0)), attachment);
+                        log.debug("discarding 0x{} received from {}", String.format("%1$02X", dst.get(0)), attachment);
                     }
                 }
             }

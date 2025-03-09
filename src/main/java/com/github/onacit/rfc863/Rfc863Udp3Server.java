@@ -11,7 +11,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 
 @Slf4j
-class Rfc863Udp3Server {
+class Rfc863Udp3Server extends _Rfc863Udp_Server {
 
     public static void main(final String... args) throws Exception {
         try (var selector = Selector.open();

@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
 @Slf4j
-class Rfc863Tcp1Server {
+class Rfc863Tcp1Server extends _Rfc863Tcp_Server {
 
     public static void main(final String... args) throws IOException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -47,7 +47,7 @@ class Rfc863Tcp1Server {
                     try {
                         log.debug("accepted from {}", client.getRemoteSocketAddress());
                         for (int r; (r = client.getInputStream().read()) != -1 && !server.isClosed(); ) { // IOException
-                            log.debug("discarding {} received from {}", String.format("0x%1$02X", r),
+                            log.debug("discarding 0x{} received from {}", String.format("%1$02X", r),
                                       client.getRemoteSocketAddress());
                         }
                     } finally {

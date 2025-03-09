@@ -4,79 +4,47 @@ import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.StandardSocketOptions;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
-import java.nio.channels.CompletionHandler;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc863Tcp4Client {
+class Rfc863Tcp4Client extends _Rfc863Tcp_Client {
 
-    public static void main(final String... args) throws IOException, InterruptedException {
-        try (var client = AsynchronousSocketChannel.open()) {
-            {
-                try {
-                    client.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE);
-                } catch (final Exception e) {
-                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, e);
-                }
-                try {
-                    client.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE);
-                } catch (final Exception e) {
-                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, e);
-                }
+    /**
+     * .
+     *
+     * @param args .
+     * @throws IOException          .
+     * @throws InterruptedException .
+     * @throws ExecutionException   .
+     * @see AsynchronousSocketChannel#connect(SocketAddress)
+     * @see AsynchronousSocketChannel#write(ByteBuffer)
+     * @see Future#get()
+     */
+    public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
+        try (var client = AsynchronousSocketChannel.open()) { // IOException
+
+            // ------------------------------------------------------------------------------------------------- connect
+            final var connecting = client.connect(_Constants.SERVER_ENDPOINT);
+            final var result = connecting.get(); // InterruptedException, ExecutionException
+            assert result == null;
+            log.debug("connected to {}, through {}", client.getRemoteAddress(), client.getLocalAddress());
+
+            // -------------------------------------------------------------------------- read-quit-and-close-the-client
+            __Utils.readQuitAndClose(true, client);
+
+            // ---------------------------------------------------------------------------------------------- send-bytes
+            for (final var src = ByteBuffer.allocate(1); client.isOpen(); ) {
+                ThreadLocalRandom.current().nextBytes(src.array());
+                final var writing = client.write(src.clear()); // IOException
+                final var w = writing.get(); // InterruptedException, ExecutionException
+                assert w > 0;
+                Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
             }
-            final var latch = new CountDownLatch(1);
-            __Utils.readQuitAndRun(false, latch::countDown);
-            client.connect( // @formatter:off
-                    _Constants.SERVER_ENDPOINT, // <remote>
-                    null,                       // <attachment>
-                    new CompletionHandler<>() { // <handler>
-                        @Override public void completed(final Void result, final Object attachment) {
-                            try {
-                                log.debug("connected to {}, through {}", client.getRemoteAddress(),
-                                          client.getLocalAddress());
-                            } catch (final IOException ioe) {
-                                throw new RuntimeException("failed to get remote address of " + client, ioe);
-                            }
-                            final var src = ByteBuffer.allocate(1);
-                            ThreadLocalRandom.current().nextBytes(src.array());
-                            client.write(
-                                    src,                        // <src>
-                                    null,                       // <attachment>
-                                    new CompletionHandler<>() { // <handler>
-                                        @Override
-                                        public void completed(final Integer w, final Object attachment) {
-                                            assert w == 1;
-                                            try {
-                                                Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
-                                            } catch (final InterruptedException ie) {
-                                                Thread.currentThread().interrupt();
-                                                return;
-                                            }
-                                            ThreadLocalRandom.current().nextBytes(src.array());
-                                            client.write(
-                                                    src.clear(), // <src>
-                                                    null,        // <attachment>
-                                                    this         // <handler>
-                                            );
-                                        }
-                                        @Override public void failed(final Throwable exc, final Object attachment) {
-                                            log.error("failed to write", exc);
-                                            latch.countDown();
-                                        }
-                                    }
-                            );
-                        }
-                        @Override public void failed(final Throwable exc, final Object attachment) {
-                            log.error("failed to connect", exc);
-                            latch.countDown();
-                        }
-                    }
-            ); // @formatter:on
-            latch.await(); // InterruptedException
         }
     }
 }

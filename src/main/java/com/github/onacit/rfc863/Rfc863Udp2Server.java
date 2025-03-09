@@ -11,7 +11,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.DatagramChannel;
 
 @Slf4j
-class Rfc863Udp2Server {
+class Rfc863Udp2Server extends _Rfc863Udp_Server {
 
     public static void main(final String... args) throws Exception {
         try (var server = DatagramChannel.open()) {

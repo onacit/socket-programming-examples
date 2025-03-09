@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 
 @Slf4j
-class Rfc863Tcp3Server {
+class Rfc863Tcp3Server extends _Rfc863Tcp_Server{
 
     public static void main(final String... args) throws IOException {
         try (var selector = Selector.open();
@@ -75,7 +75,7 @@ class Rfc863Tcp3Server {
                             continue;
                         }
                         assert r > 0; // why?
-                        log.debug("discarding {} received from {}", String.format("0x%1$02X", dst.get(0)), attachment);
+                        log.debug("discarding 0x{} received from {}", String.format("%1$02X", dst.get(0)), attachment);
                     }
                 }
             }

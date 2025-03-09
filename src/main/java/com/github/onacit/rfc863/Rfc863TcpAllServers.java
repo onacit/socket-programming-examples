@@ -15,6 +15,7 @@ class Rfc863TcpAllServers {
                 Rfc863Tcp1Server.class,
                 Rfc863Tcp2Server.class,
                 Rfc863Tcp3Server.class,
+                Rfc863Tcp5Server.class,
                 Rfc863Tcp4Server.class
         );
         __Utils.acceptCommandAndClasspath((cmd, cp) -> {

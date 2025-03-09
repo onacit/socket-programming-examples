@@ -10,7 +10,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.util.concurrent.Executors;
 
 @Slf4j
-class Rfc863Tcp2Server {
+class Rfc863Tcp2Server extends _Rfc863Tcp_Server{
 
     public static void main(final String... args) throws IOException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -44,7 +44,7 @@ class Rfc863Tcp2Server {
                         log.debug("accepted from {}", client.getRemoteAddress()); // IOException
                         for (final var dst = ByteBuffer.allocate(1);
                              server.isOpen() && client.read(dst.clear()) != -1; ) {
-                            log.debug("discarding {} received from {}", String.format("0x%1$02X", dst.get(0)),
+                            log.debug("discarding 0x{} received from {}", String.format("%1$02X", dst.get(0)),
                                       client.getRemoteAddress());
                         }
                     } finally {
