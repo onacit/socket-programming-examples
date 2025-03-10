@@ -46,8 +46,8 @@ class Rfc863Tcp1Server extends _Rfc863Tcp_Server {
                 executor.submit(() -> {
                     try {
                         log.debug("accepted from {}", client.getRemoteSocketAddress());
-                        for (int r; (r = client.getInputStream().read()) != -1 && !server.isClosed(); ) { // IOException
-                            log.debug("discarding 0x{} received from {}", String.format("%1$02X", r),
+                        for (int b; (b = client.getInputStream().read()) != -1 && !server.isClosed(); ) { // IOException
+                            log.debug("discarding {} received from {}", String.format("0x%1$02X", b),
                                       client.getRemoteSocketAddress());
                         }
                     } finally {

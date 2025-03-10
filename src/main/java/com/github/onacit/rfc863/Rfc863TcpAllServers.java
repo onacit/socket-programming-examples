@@ -10,16 +10,20 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 class Rfc863TcpAllServers {
 
+    /**
+     * An unmodifiable list of all subclasses of {@link _Rfc863Tcp_Server}.
+     */
+    static final List<Class<? extends _Rfc863Tcp_Server>> CLASSES = List.of(
+            Rfc863Tcp1Server.class,
+            Rfc863Tcp2Server.class,
+            Rfc863Tcp3Server.class,
+            Rfc863Tcp5Server.class,
+            Rfc863Tcp4Server.class
+    );
+
     public static void main(final String... args) {
-        final var classes = List.of(
-                Rfc863Tcp1Server.class,
-                Rfc863Tcp2Server.class,
-                Rfc863Tcp3Server.class,
-                Rfc863Tcp5Server.class,
-                Rfc863Tcp4Server.class
-        );
         __Utils.acceptCommandAndClasspath((cmd, cp) -> {
-            final var processes = classes.stream()
+            final var processes = CLASSES.stream()
                     .map(c -> new ProcessBuilder(cmd, "-cp", cp, c.getName())
                             .redirectOutput(ProcessBuilder.Redirect.INHERIT))
                     .map(b -> {

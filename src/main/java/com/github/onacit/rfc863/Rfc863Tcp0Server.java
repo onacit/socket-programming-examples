@@ -24,13 +24,14 @@ class Rfc863Tcp0Server {
 
     public static void main(final String... args) throws IOException {
         try (var server = new ServerSocket()) {
-            server.bind(ENDPOINT); // IOException
-            log.info("bound to {}", server.getLocalSocketAddress());
+            {
+                server.bind(ENDPOINT); // IOException
+                log.info("bound to {}", server.getLocalSocketAddress());
+            }
             try (var client = server.accept()) { // IOException
                 log.debug("accepted from {}", client.getRemoteSocketAddress());
                 for (int b; (b = client.getInputStream().read()) != -1; ) { // IOException
-                    assert b >= 0 && b < 256;
-                    log.debug("discarding 0x{} received from {}", String.format("%1$02X", b),
+                    log.debug("discarding {} received from {}", String.format("0x%1$02X", b),
                               client.getRemoteSocketAddress());
                 }
             }

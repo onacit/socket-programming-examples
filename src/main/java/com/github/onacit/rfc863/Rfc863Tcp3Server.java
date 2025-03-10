@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 
 @Slf4j
-class Rfc863Tcp3Server extends _Rfc863Tcp_Server{
+class Rfc863Tcp3Server extends _Rfc863Tcp_Server {
 
     public static void main(final String... args) throws IOException {
         try (var selector = Selector.open();
@@ -29,10 +29,10 @@ class Rfc863Tcp3Server extends _Rfc863Tcp_Server{
                 server.socket().setReuseAddress(true); // SocketException
             }
             {
-                assert server.socket().isBound();
+                assert !server.socket().isBound();
                 server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
+                assert server.socket().isBound();
                 log.info("bound to {}", server.getLocalAddress());
-                assert server.isBlocking();
             }
             final SelectionKey serverKey;
             {
@@ -44,6 +44,16 @@ class Rfc863Tcp3Server extends _Rfc863Tcp_Server{
             __Utils.readQuitAndRun(true, () -> {
                 serverKey.cancel();
                 assert !serverKey.isValid();
+                selector.keys().stream()
+                        .map(SelectionKey::channel)
+                        .filter(c -> c instanceof SocketChannel)
+                        .forEach(c -> {
+                            try {
+                                c.close();
+                            } catch (final IOException ioe) {
+                                throw new RuntimeException("failed to close " + c, ioe);
+                            }
+                        });
                 selector.wakeup();
             });
             for (final var dst = ByteBuffer.allocate(1); serverKey.isValid(); ) {
@@ -54,7 +64,7 @@ class Rfc863Tcp3Server extends _Rfc863Tcp_Server{
                     final var channel = key.channel();
                     if (key.isAcceptable()) {
                         assert channel == server;
-                        final var client = ((ServerSocketChannel) channel).accept();
+                        final var client = ((ServerSocketChannel) channel).accept(); // IOException
                         log.debug("accepted from {}, through {}",
                                   client.getRemoteAddress(), // IOException
                                   client.getLocalAddress() // IOException
@@ -75,7 +85,7 @@ class Rfc863Tcp3Server extends _Rfc863Tcp_Server{
                             continue;
                         }
                         assert r > 0; // why?
-                        log.debug("discarding 0x{} received from {}", String.format("%1$02X", dst.get(0)), attachment);
+                        log.debug("discarding {} received from {}", String.format("0x%1$02X", dst.get(0)), attachment);
                     }
                 }
             }

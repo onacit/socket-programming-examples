@@ -13,24 +13,27 @@ class Rfc863Tcp2Client extends _Rfc863Tcp_Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = SocketChannel.open()) {
-
-            assert !client.socket().isBound();
-            assert !client.isConnected();
-            assert client.isBlocking();
-            final var connected = client.connect(_Constants.SERVER_ENDPOINT); // IOException
-            assert connected;
-            assert client.socket().isBound();
-            assert client.isConnected();
-            log.debug("connected to {}, through {}", client.getRemoteAddress(), client.getLocalAddress());
-
-            __Utils.readQuitAndClose(true, client);
-
+            {
+                assert !client.socket().isBound();
+                assert !client.isConnected();
+                assert client.isBlocking();
+                final var connected = client.connect(_Constants.SERVER_ENDPOINT); // IOException
+                assert connected;
+                assert client.socket().isBound();
+                assert client.isConnected();
+                log.debug("connected to {}, through {}", client.getRemoteAddress(), client.getLocalAddress());
+            }
+            {
+                __Utils.readQuitAndClose(true, client);
+            }
             for (final var src = ByteBuffer.allocate(1); client.isOpen(); ) {
-                ThreadLocalRandom.current().nextBytes(src.clear().array());
-                assert src.hasRemaining();
-                final var w = client.write(src); // IOException
-                assert w >= src.capacity(); // why?
-                assert !src.hasRemaining(); // why?
+                ThreadLocalRandom.current().nextBytes(src.array());
+                if (ThreadLocalRandom.current().nextBoolean()) {
+                    final var w = client.write(src.clear()); // IOException
+                    assert w == 1;
+                } else {
+                    client.socket().getOutputStream().write(src.get(0) & 0xFF); // IOException
+                }
                 Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
             }
         }

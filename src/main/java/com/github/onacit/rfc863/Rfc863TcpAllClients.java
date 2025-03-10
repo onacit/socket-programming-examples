@@ -9,16 +9,20 @@ import java.util.List;
 @Slf4j
 class Rfc863TcpAllClients {
 
+    /**
+     * An unmodifiable list of all subclasses extend {@link _Rfc863Tcp_Client}.
+     */
+    static final List<Class<? extends _Rfc863Tcp_Client>> CLASSES = List.of(
+            Rfc863Tcp1Client.class,
+            Rfc863Tcp2Client.class,
+            Rfc863Tcp3Client.class,
+            Rfc863Tcp4Client.class,
+            Rfc863Tcp5Client.class
+    );
+
     public static void main(final String... args) {
-        final var classes = List.of(
-                Rfc863Tcp1Client.class,
-                Rfc863Tcp2Client.class,
-                Rfc863Tcp3Client.class,
-                Rfc863Tcp4Client.class,
-                Rfc863Tcp5Client.class
-        );
         __Utils.acceptCommandAndClasspath((command, classpath) -> {
-            final var processes = classes.stream()
+            final var processes = CLASSES.stream()
                     .map(c -> new ProcessBuilder(command, "-cp", classpath, c.getName())
                             .redirectOutput(ProcessBuilder.Redirect.INHERIT))
                     .map(b -> {
