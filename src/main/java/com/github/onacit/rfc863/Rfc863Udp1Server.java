@@ -1,7 +1,7 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Constants;
 import com.github.onacit.__Utils;
-import com.github.onacit.rfc768.__Rfc768_Constants;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.DatagramPacket;
@@ -12,24 +12,16 @@ class Rfc863Udp1Server extends _Rfc863Udp_Server {
 
     public static void main(final String... args) throws Exception {
         try (var server = new DatagramSocket(null)) {
-
-            if (!server.getReuseAddress()) {
-                server.setReuseAddress(true); // SocketException
-            }
-
+            server.setReuseAddress(true); // SocketException
             assert !server.isBound();
-            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
+            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // SocketException
             log.info("bound to {}", server.getLocalSocketAddress());
-
             __Utils.readQuitAndClose(true, server);
-
             final DatagramPacket packet;
             {
-                final var buf = new byte[__Rfc768_Constants.IPv4PseudoHeader.DATA_BYTES_MAX];
-                final var length = buf.length;
-                packet = new DatagramPacket(buf, length);
+                final var buf = new byte[__Constants.UDP_PAYLOAD_MAX];
+                packet = new DatagramPacket(buf, buf.length);
             }
-
             while (!server.isClosed()) {
                 server.receive(packet); // IOException
                 log.debug("discarding {} byte(s) received from {}", String.format("%1$5d", packet.getLength()),

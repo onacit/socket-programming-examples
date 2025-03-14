@@ -28,7 +28,7 @@ class Rfc863Udp3Server extends _Rfc863Udp_Server {
                 selector.wakeup();
                 return null;
             });
-            final var dst = ByteBuffer.allocate(__Constants.UDP_LEN);
+            final var dst = ByteBuffer.allocate(__Constants.UDP_PAYLOAD_MAX);
             while (serverKey.isValid()) {
                 final var count = selector.select(0);
                 assert count == 0 || count == 1;

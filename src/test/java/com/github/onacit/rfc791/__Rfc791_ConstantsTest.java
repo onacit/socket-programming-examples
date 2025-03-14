@@ -12,8 +12,8 @@ class __Rfc791_ConstantsTest {
 
         @Test
         void __() {
-            log.debug("size: {}, bytes: {}", __Rfc791_Constants.InternetHeaderFormat.SIZE,
-                      __Rfc791_Constants.InternetHeaderFormat.BYTES);
+//            log.debug("size: {}, bytes: {}", __Rfc791_Constants.InternetHeaderFormat.SIZE,
+//                      __Rfc791_Constants.InternetHeaderFormat.BYTES);
         }
     }
 }

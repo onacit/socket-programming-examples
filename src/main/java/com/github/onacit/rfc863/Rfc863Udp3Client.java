@@ -35,7 +35,7 @@ class Rfc863Udp3Client extends _Rfc863Udp_Client {
                 clientKey.cancel();
                 selector.wakeup();
             });
-            final var src = ByteBuffer.allocate(__Constants.UDP_LEN);
+            final var src = ByteBuffer.allocate(__Constants.UDP_PAYLOAD_MAX);
             while (clientKey.isValid()) {
                 final var count = selector.select(0);
                 assert count >= 0;

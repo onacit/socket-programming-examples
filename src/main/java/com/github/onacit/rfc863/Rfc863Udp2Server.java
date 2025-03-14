@@ -30,7 +30,7 @@ class Rfc863Udp2Server extends _Rfc863Udp_Server {
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             log.info("bound to {}", server.getLocalAddress());
             __Utils.readQuitAndClose(true, server);
-            final var dst = ByteBuffer.allocate(__Constants.UDP_LEN);
+            final var dst = ByteBuffer.allocate(__Constants.UDP_PAYLOAD_MAX);
             while (server.isOpen()) {
                 final SocketAddress a;
                 try {

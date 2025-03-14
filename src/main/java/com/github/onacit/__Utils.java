@@ -45,7 +45,7 @@ public final class __Utils {
 
     /**
      * Starts a new thread which keeps reading lines from the {@link System#in standard input stream} until it reads a
-     * line contains (case-insensitively) '{@code quit}, and {@link Callable#call() calls} specified task.
+     * line contains (case-insensitively) '{@code quit}, and then {@link Callable#call() calls} specified task.
      *
      * @param daemon   a flag for starting the thread as s daemon; {@code true} for {@code daemon}; {@code false}
      *                 otherwise.
@@ -57,7 +57,7 @@ public final class __Utils {
             try {
                 readQuit();
             } catch (final IOException ioe) {
-                log.error("failed to read quit", ioe);
+                log.error("failed to read 'quit'", ioe);
             } finally {
                 try {
                     callable.call();
@@ -70,7 +70,7 @@ public final class __Utils {
 
     /**
      * Starts a new thread which keeps reading lines from the {@link System#in standard input stream} until it reads a
-     * line contains (case-insensitively) '{@code quit}', and {@link Runnable#run() runs} specified task.
+     * line contains (case-insensitively) '{@code quit}', and then {@link Runnable#run() runs} specified task.
      *
      * @param daemon   a flag for starting the thread as s daemon; {@code true} for {@code daemon}; {@code false}
      *                 otherwise.
@@ -90,7 +90,8 @@ public final class __Utils {
 
     /**
      * Starts a new thread which keeps reading lines from the {@link System#in standard input stream} until it reads a
-     * line contains (case-insensitively) '{@code quit}', and {@link Closeable#close() closes} specified closeable.
+     * line contains (case-insensitively) '{@code quit}', and then {@link Closeable#close() closes} specified
+     * closeable.
      *
      * @param daemon    a flag for starting the thread as s daemon; {@code true} for {@code daemon}; {@code false}
      *                  otherwise.
@@ -111,7 +112,8 @@ public final class __Utils {
 
     // -----------------------------------------------------------------------------------------------------------------
     // https://stackoverflow.com/a/54790608/330457
-    public static <R> R applyCommandAndClasspath(final BiFunction<? super String, ? super String, ? extends R> function) {
+    public static <R> R applyCommandAndClasspath(
+            final BiFunction<? super String, ? super String, ? extends R> function) {
         Objects.requireNonNull(function, "function is null");
         final var info = ProcessHandle.current().info();
         final var command = info.command().orElseThrow();
@@ -128,8 +130,6 @@ public final class __Utils {
             }
             classpath = Optional.ofNullable(cp).orElse(".");
         }
-//        log.debug("command: {}", command);
-//        log.debug("classpath: {}", classpath);
         return function.apply(command, classpath);
     }
 

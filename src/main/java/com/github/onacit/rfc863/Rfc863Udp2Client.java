@@ -15,7 +15,7 @@ class Rfc863Udp2Client extends _Rfc863Udp_Client {
     public static void main(final String... args) throws Exception {
         try (var client = DatagramChannel.open()) {
             __Utils.readQuitAndClose(true, client);
-            final var src = ByteBuffer.allocate(__Constants.UDP_LEN);
+            final var src = ByteBuffer.allocate(__Constants.UDP_PAYLOAD_MAX);
             while (client.isOpen()) {
                 ThreadLocalRandom.current().nextBytes(src.array());
                 src.clear()

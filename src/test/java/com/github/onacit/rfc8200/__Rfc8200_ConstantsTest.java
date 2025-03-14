@@ -12,7 +12,7 @@ class __Rfc8200_ConstantsTest {
 
         @Test
         void __() {
-            log.debug("size: {}, bytes: {}", __Rfc8200_Constants.Ipv6HeaderFormat.SIZE,
+            log.debug("SIZE: {}, BYTES: {}", __Rfc8200_Constants.Ipv6HeaderFormat.SIZE,
                       __Rfc8200_Constants.Ipv6HeaderFormat.BYTES);
         }
     }

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
@@ -17,7 +18,7 @@ class Rfc863Udp0Client {
             final var buf = new byte[ThreadLocalRandom.current().nextInt(128)];
             ThreadLocalRandom.current().nextBytes(buf);
             final var packet = new DatagramPacket(buf, buf.length);
-            packet.setSocketAddress(Rfc863Udp0Server.ENDPOINT);
+            packet.setSocketAddress(new InetSocketAddress(Rfc863Udp0Server.ADDR, Rfc863Udp0Server.PORT));
             log.debug("sending {} byte(s) to {}", packet.getLength(), packet.getSocketAddress());
             client.send(packet); // IOException
         }
