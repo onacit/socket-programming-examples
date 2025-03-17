@@ -1,4 +1,4 @@
-package com.github.onacit.rfc864;
+package com.github.onacit.rfc863;
 
 import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -8,18 +8,22 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-class Rfc864TcpAllServers {
+class Rfc863Tcp_AllServers {
+
+    /**
+     * An unmodifiable list of all subclasses of {@link _Rfc863Tcp_Server}.
+     */
+    static final List<Class<? extends _Rfc863Tcp_Server>> CLASSES = List.of(
+            Rfc863Tcp1Server_ServerSocket.class,
+            Rfc863Tcp2Server_ServerSocketChannel_Blocking.class,
+            Rfc863Tcp3Server_ServerSocketChannel_NonBlocking.class,
+            Rfc863Tcp5Server_AsynchronousServerSocketChannel.class,
+            Rfc863Tcp4Server_AsynchronousServerSocketChannel_Future.class
+    );
 
     public static void main(final String... args) {
-        final var classes = List.of(
-                Rfc864Tcp1Server_Socket.class,
-                Rfc864Tcp2Server_SocketChannel_Blocking.class
-//                ,
-//                Rfc864Tcp3Server.class,
-//                Rfc864Tcp4Server.class
-        );
         __Utils.acceptCommandAndClasspath((cmd, cp) -> {
-            final var processes = classes.stream()
+            final var processes = CLASSES.stream()
                     .map(c -> new ProcessBuilder(cmd, "-cp", cp, c.getName())
                             .redirectOutput(ProcessBuilder.Redirect.INHERIT))
                     .map(b -> {

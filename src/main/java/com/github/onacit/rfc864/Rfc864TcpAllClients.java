@@ -12,10 +12,10 @@ class Rfc864TcpAllClients {
 
     public static void main(final String... args) {
         final var classes = List.of(
-                Rfc864Tcp1Client.class,
-                Rfc864Tcp2Client.class,
-                Rfc864Tcp3Client.class,
-                Rfc864Tcp4Client.class
+                Rfc864Tcp1Client_Socket.class,
+                Rfc864Tcp2Client_SocketChannel_Blocking.class,
+                Rfc864Tcp4Client_SocketChannel_NonBlocking.class,
+                Rfc864Tcp5Client_AsynchronousSocketChannel.class
         );
         __Utils.acceptCommandAndClasspath((command, classpath) -> {
             final var processes = classes.stream()

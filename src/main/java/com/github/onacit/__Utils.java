@@ -3,9 +3,11 @@ package com.github.onacit;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -139,6 +141,53 @@ public final class __Utils {
             consumer.accept(cmd, cp);
             return null;
         });
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Randomizes content of specified buffer, between its {@code psotion} and {@code limit}.
+     *
+     * @param buffer the buffer.
+     * @param <T>    buffer type parameter
+     * @return given {@code buffer}.
+     */
+    public static <T extends ByteBuffer> T randomizeContent(final T buffer) {
+        Objects.requireNonNull(buffer, "buffer is null");
+        final var src = new byte[buffer.remaining()];
+        ThreadLocalRandom.current().nextBytes(src);
+        if (buffer.hasArray()) {
+            System.arraycopy(src, 0, buffer.array(), buffer.position(), buffer.remaining());
+        } else {
+            buffer.put(buffer.position(), src);
+        }
+        return buffer;
+    }
+
+    /**
+     * Randomizes specified buffer's position and limit.
+     *
+     * @param buffer the buffer.
+     * @param <T>    buffer type parameter
+     * @return given {@code buffer}.
+     */
+    public static <T extends ByteBuffer> T randomizeRemaining(final T buffer) {
+        Objects.requireNonNull(buffer, "buffer is null");
+        buffer.position(buffer.position() + ThreadLocalRandom.current().nextInt(buffer.remaining() + 1));
+        buffer.limit(buffer.limit() - ThreadLocalRandom.current().nextInt(buffer.remaining() + 1));
+        return buffer;
+    }
+
+    /**
+     * Randomizes specified buffer's position, limit, and its content between the new range.
+     *
+     * @param buffer the buffer.
+     * @param <T>    buffer type parameter
+     * @return given {@code buffer}.
+     */
+    public static <T extends ByteBuffer> T randomize(final T buffer) {
+        Objects.requireNonNull(buffer, "buffer is null");
+        return randomizeContent(randomizeRemaining(buffer));
     }
 
     // -----------------------------------------------------------------------------------------------------------------

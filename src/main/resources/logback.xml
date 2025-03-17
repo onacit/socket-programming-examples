@@ -6,10 +6,10 @@
   <appender name="STDOUT" class="ConsoleAppender">
     <encoder class="PatternLayoutEncoder">
       <!--            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} -%kvp- %msg%n</pattern>-->
-<!--      <pattern>%d{HH:mm:ss.SSS} [%-20thread] %-5level -%kvp- %msg%n</pattern>-->
-<!--      <pattern>%d{HH:mm:ss.SSS} [%-20thread] %-5level - %msg%n</pattern>-->
+      <!--      <pattern>%d{HH:mm:ss.SSS} [%-20thread] %-5level -%kvp- %msg%n</pattern>-->
+      <!--      <pattern>%d{HH:mm:ss.SSS} [%-20thread] %-5level - %msg%n</pattern>-->
       <pattern>%d{HH:mm:ss.SSS} [%20thread] %-5level - %msg%n</pattern>
-<!--      <pattern>%d{HH:mm:ss.SSS} [%10thread] %-5level %C - %msg%n</pattern>-->
+      <!--      <pattern>%d{HH:mm:ss.SSS} [%10thread] %-5level %C - %msg%n</pattern>-->
     </encoder>
   </appender>
   <root level="debug">
