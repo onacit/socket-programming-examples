@@ -8,6 +8,6 @@ import lombok.extern.slf4j.Slf4j;
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
 @Slf4j
-abstract class _Rfc863Udp_Client {
+abstract class Rfc863Tcp$Client {
 
 }

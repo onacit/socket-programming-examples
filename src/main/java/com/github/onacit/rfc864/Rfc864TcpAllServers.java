@@ -12,8 +12,8 @@ class Rfc864TcpAllServers {
 
     public static void main(final String... args) {
         final var classes = List.of(
-                Rfc864Tcp1Server_Socket.class,
-                Rfc864Tcp2Server_SocketChannel_Blocking.class
+                Rfc864Tcp1Server_ServerSocket.class,
+                Rfc864Tcp2Server_ServerSocketChannel_Blocking.class
 //                ,
 //                Rfc864Tcp3Server.class,
 //                Rfc864Tcp4Server.class

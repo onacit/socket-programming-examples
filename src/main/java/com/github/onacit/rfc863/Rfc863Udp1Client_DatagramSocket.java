@@ -11,10 +11,11 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc863Udp1Client_DatagramSocket extends _Rfc863Udp_Client {
+class Rfc863Udp1Client_DatagramSocket extends Rfc863Udp$Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = new DatagramSocket(null)) { // -> close() -> IOException
+            // bind, optionally ----------------------------------------------------------------------------------------
             assert !client.isBound();
             if (ThreadLocalRandom.current().nextBoolean()) {
                 client.setReuseAddress(true); // SocketException
@@ -22,13 +23,16 @@ class Rfc863Udp1Client_DatagramSocket extends _Rfc863Udp_Client {
                 log.debug("bound to {}", client.getLocalSocketAddress());
                 assert client.isBound();
             }
+            // read 'quit', and close the <client> ---------------------------------------------------------------------
             __Utils.readQuitAndClose(true, client);
+            // prepare a package ---------------------------------------------------------------------------------------
             final DatagramPacket packet;
             {
                 final var buf = new byte[__Constants.UDP_PAYLOAD_MAX];
                 packet = new DatagramPacket(buf, buf.length);
                 packet.setSocketAddress(_Constants.SERVER_ENDPOINT);
             }
+            // keep randomizing/sending the <packet> -------------------------------------------------------------------
             while (!client.isClosed()) {
                 ThreadLocalRandom.current().nextBytes(packet.getData());
                 packet.setLength(ThreadLocalRandom.current().nextInt(packet.getData().length + 1));

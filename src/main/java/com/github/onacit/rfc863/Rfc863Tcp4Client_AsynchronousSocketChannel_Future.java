@@ -12,7 +12,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc863Tcp4Client_AsynchronousSocketChannel_Future extends _Rfc863Tcp_Client {
+class Rfc863Tcp4Client_AsynchronousSocketChannel_Future extends Rfc863Tcp$Client {
 
     /**
      * .

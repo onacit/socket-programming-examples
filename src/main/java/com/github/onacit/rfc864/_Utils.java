@@ -15,94 +15,33 @@ final class _Utils {
             __Rfc864_Constants.PATTERN.getBytes(StandardCharsets.US_ASCII)
     ).asReadOnlyBuffer();
 
-    static ByteBuffer newBuffer() {
-        final var buffer = BUFFER.slice();
-        assert buffer.position() == 0;
-        assert buffer.limit() == buffer.capacity();
-        return buffer;
-    }
-
     static _Generator newPatternGenerator() {
         final var buffer = BUFFER.slice();
         final var indices = new int[]{0, 1};
         final var dst = ByteBuffer.allocate(3).flip();
-        return new _Generator() {
-            @Override
-            public ByteBuffer generate(ByteBuffer dst) {
-                if (indices[0] == 72) {
-                    if (dst.remaining() < 2) {
-                        return dst;
-                    }
-                    dst.put((byte) 0x0D).put((byte) 0x0A); // CR LF
-                    indices[0] = 0;
-                    buffer.position(indices[1]++);
-                    if (indices[1] == buffer.capacity()) {
-                        indices[1] = 0;
-                    }
+        return () -> {
+            dst.compact();
+            if (indices[0] == 72) {
+                if (dst.remaining() < 2) {
+                    return buffer.flip();
                 }
-                while (dst.hasRemaining()) {
-                    if (!buffer.hasRemaining()) {
-                        buffer.position(0);
-                    }
-                    dst.put(buffer.get());
-                    if (++indices[0] == 72) {
-                        break;
-                    }
+                dst.put((byte) 0x0D).put((byte) 0x0A); // CR LF
+                indices[0] = 0;
+                buffer.position(indices[1]++);
+                if (indices[1] == buffer.capacity()) {
+                    indices[1] = 0;
                 }
-                return dst;
             }
-
-            @Override
-            public _Generator generate() {
-                dst.compact();
-                if (indices[0] == 72) {
-                    if (dst.remaining() < 2) {
-                        return this;
-                    }
-                    dst.put((byte) 0x0D).put((byte) 0x0A); // CR LF
-                    indices[0] = 0;
-                    buffer.position(indices[1]++);
-                    if (indices[1] == buffer.capacity()) {
-                        indices[1] = 0;
-                    }
+            while (dst.hasRemaining()) {
+                if (!buffer.hasRemaining()) {
+                    buffer.position(0);
                 }
-                while (dst.hasRemaining()) {
-                    if (!buffer.hasRemaining()) {
-                        buffer.position(0);
-                    }
-                    dst.put(buffer.get());
-                    if (++indices[0] == 72) {
-                        break;
-                    }
+                dst.put(buffer.get());
+                if (++indices[0] == 72) {
+                    break;
                 }
-                return this;
             }
-
-            @Override
-            public ByteBuffer buffer() {
-                dst.compact();
-                if (indices[0] == 72) {
-                    if (dst.remaining() < 2) {
-                        return buffer.flip();
-                    }
-                    dst.put((byte) 0x0D).put((byte) 0x0A); // CR LF
-                    indices[0] = 0;
-                    buffer.position(indices[1]++);
-                    if (indices[1] == buffer.capacity()) {
-                        indices[1] = 0;
-                    }
-                }
-                while (dst.hasRemaining()) {
-                    if (!buffer.hasRemaining()) {
-                        buffer.position(0);
-                    }
-                    dst.put(buffer.get());
-                    if (++indices[0] == 72) {
-                        break;
-                    }
-                }
-                return dst.flip();
-            }
+            return dst.flip();
         };
     }
 

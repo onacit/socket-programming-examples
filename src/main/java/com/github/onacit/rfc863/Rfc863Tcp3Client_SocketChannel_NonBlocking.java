@@ -11,7 +11,7 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc863Tcp3Client_SocketChannel_NonBlocking extends _Rfc863Tcp_Client {
+class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
 
     public static void main(final String... args) throws IOException {
         try (var selector = Selector.open();

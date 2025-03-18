@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
 @Slf4j
-class Rfc863Tcp1Client_Socket extends _Rfc863Tcp_Client {
+class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = new Socket()) {

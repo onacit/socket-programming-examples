@@ -11,9 +11,9 @@ import java.util.concurrent.TimeUnit;
 class Rfc863Tcp_AllServers {
 
     /**
-     * An unmodifiable list of all subclasses of {@link _Rfc863Tcp_Server}.
+     * An unmodifiable list of all subclasses of {@link Rfc863Tcp$Server}.
      */
-    static final List<Class<? extends _Rfc863Tcp_Server>> CLASSES = List.of(
+    static final List<Class<? extends Rfc863Tcp$Server>> CLASSES = List.of(
             Rfc863Tcp1Server_ServerSocket.class,
             Rfc863Tcp2Server_ServerSocketChannel_Blocking.class,
             Rfc863Tcp3Server_ServerSocketChannel_NonBlocking.class,

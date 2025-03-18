@@ -11,7 +11,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc863Tcp5Client_AsynchronousSocketChannel extends _Rfc863Tcp_Client {
+class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = AsynchronousSocketChannel.open()) {

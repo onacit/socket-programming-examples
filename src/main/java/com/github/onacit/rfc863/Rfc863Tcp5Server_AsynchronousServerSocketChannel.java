@@ -13,7 +13,7 @@ import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CountDownLatch;
 
 @Slf4j
-class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends _Rfc863Tcp_Server {
+class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var server = AsynchronousServerSocketChannel.open()) {

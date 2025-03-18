@@ -9,7 +9,7 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc863Tcp2Client_SocketChannel_Blocking extends _Rfc863Tcp_Client {
+class Rfc863Tcp2Client_SocketChannel_Blocking extends Rfc863Tcp$Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = SocketChannel.open()) {

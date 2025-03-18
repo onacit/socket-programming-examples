@@ -10,9 +10,9 @@ import java.util.List;
 class Rfc863Tcp_AllClients {
 
     /**
-     * An unmodifiable list of all subclasses extend {@link _Rfc863Tcp_Client}.
+     * An unmodifiable list of all subclasses extend {@link Rfc863Tcp$Client}.
      */
-    static final List<Class<? extends _Rfc863Tcp_Client>> CLASSES = List.of(
+    static final List<Class<? extends Rfc863Tcp$Client>> CLASSES = List.of(
             Rfc863Tcp1Client_Socket.class,
             Rfc863Tcp2Client_SocketChannel_Blocking.class,
             Rfc863Tcp3Client_SocketChannel_NonBlocking.class,

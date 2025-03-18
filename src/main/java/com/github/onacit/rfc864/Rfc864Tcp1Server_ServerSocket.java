@@ -10,25 +10,31 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc864Tcp1Server_Socket extends _Rfc864Tcp_Server {
+class Rfc864Tcp1Server_ServerSocket extends Rfc864Tcp$Server {
 
     public static void main(final String... args) throws IOException {
         try (var executor = Executors.newCachedThreadPool();
-             var server = new ServerSocket()) {
-            try {
-                server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE);
-            } catch (final UnsupportedOperationException uhe) {
-                // empty
+             var server = new ServerSocket()) { // close() -> IOException
+            {
+                try {
+                    server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
+                } catch (final UnsupportedOperationException uhe) {
+                    // empty
+                }
+                try {
+                    server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
+                } catch (final UnsupportedOperationException yhe) {
+                    // empty
+                }
+                server.setReuseAddress(true); // SocketException
             }
-            try {
-                server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE);
-            } catch (final UnsupportedOperationException yhe) {
-                // empty
+            {
+                server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException
+                log.info("bound to {}", server.getLocalSocketAddress());
             }
-            server.setReuseAddress(true); // SocketException
-            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
-            log.info("bound to {}", server.getLocalSocketAddress());
-            __Utils.readQuitAndClose(true, server);
+            {
+                __Utils.readQuitAndClose(true, server);
+            }
             while (!server.isClosed()) {
                 final var client = server.accept(); // IOException
                 executor.submit(() -> {
@@ -39,10 +45,11 @@ class Rfc864Tcp1Server_Socket extends _Rfc864Tcp_Server {
                             for (final var buffer = generator.buffer(); buffer.hasRemaining(); ) {
                                 client.getOutputStream().write(buffer.get()); // IOException
                             }
+                            // note: server doesn't need to sleep, at all
                             Thread.sleep(ThreadLocalRandom.current().nextInt(128)); // InterruptedException
                         }
                     } finally {
-                        client.close();
+                        client.close(); // IOException
                     }
                     return null;
                 });

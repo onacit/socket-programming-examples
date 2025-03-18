@@ -14,10 +14,12 @@ class Rfc864Tcp4Client_SocketChannel_NonBlocking {
 
     public static void main(final String... args) throws IOException {
         try (var selector = Selector.open();
-             var client = SocketChannel.open()) {
+             var client = SocketChannel.open()) { // IOException
+            // configure non-blocking
             assert client.isBlocking();
             client.configureBlocking(false); // IOException
             assert !client.isBlocking();
+            // try to connect
             final SelectionKey clientKey;
             if (client.connect(_Constants.SERVER_ENDPOINT)) { // IOException
                 log.debug("connected to {}", client.getRemoteAddress()); // IOException
@@ -25,35 +27,38 @@ class Rfc864Tcp4Client_SocketChannel_NonBlocking {
             } else {
                 clientKey = client.register(selector, SelectionKey.OP_CONNECT); // ClosedChannelException
             }
+            // read `quit`, and cancel the key, and wakeup the selector
             __Utils.readQuitAndRun(true, () -> {
                 clientKey.cancel();
                 selector.wakeup();
             });
+            // select and process
             for (final var dst = ByteBuffer.allocate(1); clientKey.isValid(); ) {
                 final var count = selector.select(0L); // IOException
                 assert count >= 0; // why not 1?
-                for (final var i = selector.selectedKeys().iterator(); i.hasNext(); i.remove()) { // ClosedSelectorException
+                for (final var i = selector.selectedKeys().iterator(); i.hasNext(); i.remove()) {
                     final var key = i.next();
                     assert key == clientKey;
                     final var channel = key.channel();
                     assert channel == client;
                     if (key.isConnectable()) {
-                        if (!client.finishConnect()) { // IOException
-                            log.error("failed to finish connecting");
-                            key.cancel();
-                            break;
-                        }
+                        final var connected = client.finishConnect(); // IOException
+                        assert connected;
                         log.debug("connected to {}", client.getRemoteAddress()); //  IOException
-                        key.interestOps(~SelectionKey.OP_CONNECT);
-                        key.interestOps(SelectionKey.OP_READ);
-                    } else if (key.isReadable()) {
+                        key.interestOpsAnd(~SelectionKey.OP_CONNECT);
+                        assert key.isConnectable();
+                        key.interestOpsOr(SelectionKey.OP_READ);
+                        assert !key.isReadable();
+                    }
+                    if (key.isReadable()) {
                         final var r = client.read(dst.position(0)); // IOException
                         if (r == -1) {
                             key.cancel();
-                            continue;
+                            assert !key.isValid();
+                        } else {
+                            assert r == 1; // why?
+                            System.out.print((char) dst.flip().get());
                         }
-                        assert r == 1; // why?
-                        System.out.print((char) dst.flip().get());
                     }
                 }
             }

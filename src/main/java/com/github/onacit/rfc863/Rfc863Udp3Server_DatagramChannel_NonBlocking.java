@@ -11,11 +11,12 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 
 @Slf4j
-class Rfc863Udp3Server_DatagramChannel_NonBlocking extends _Rfc863Udp_Server {
+class Rfc863Udp3Server_DatagramChannel_NonBlocking extends Rfc863Udp$Server {
 
     public static void main(final String... args) throws Exception {
         try (var selector = Selector.open();
              var server = DatagramChannel.open()) {
+            // reuse address/port --------------------------------------------------------------------------------------
             try {
                 server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
             } catch (final UnsupportedOperationException uhe) {
@@ -27,12 +28,18 @@ class Rfc863Udp3Server_DatagramChannel_NonBlocking extends _Rfc863Udp_Server {
                 // empty
             }
             server.socket().setReuseAddress(true); // SocketException
+            // bind ----------------------------------------------------------------------------------------------------
+            assert !server.socket().isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
+            assert server.socket().isBound();
             log.info("bound to {}", server.getLocalAddress()); // IOException
+            // confiture non-blocking ----------------------------------------------------------------------------------
             assert server.isBlocking();
             server.configureBlocking(false); // IOException
             assert !server.isBlocking();
+            // register the <server> to the <selector> -----------------------------------------------------------------
             final var serverKey = server.register(selector, SelectionKey.OP_READ);
+            // read 'quit', cancel the <serverKey>, wakeup the <selector> ----------------------------------------------
             __Utils.readQuitAndRun(true, () -> {
                 serverKey.cancel();
                 assert !serverKey.isValid();
@@ -46,9 +53,13 @@ class Rfc863Udp3Server_DatagramChannel_NonBlocking extends _Rfc863Udp_Server {
                     assert key == serverKey;
                     final var channel = key.channel();
                     assert channel == server;
-                    final var address = ((DatagramChannel) channel).receive(dst.clear()); // IOException
-                    log.debug("discarding {} byte(s) received from {}", String.format("%1$5d", dst.position()),
-                              address);
+                    assert key.isReadable(); // !!!
+                    // read --------------------------------------------------------------------------------------------
+                    if (key.isReadable()) {
+                        final var address = ((DatagramChannel) channel).receive(dst.clear()); // IOException
+                        log.debug("discarding {} byte(s) received from {}", String.format("%1$5d", dst.position()),
+                                  address);
+                    }
                 }
             }
         }

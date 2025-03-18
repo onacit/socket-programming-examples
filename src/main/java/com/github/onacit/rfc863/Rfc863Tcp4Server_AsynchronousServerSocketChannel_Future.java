@@ -11,7 +11,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 @Slf4j
-class Rfc863Tcp4Server_AsynchronousServerSocketChannel_Future extends _Rfc863Tcp_Server {
+class Rfc863Tcp4Server_AsynchronousServerSocketChannel_Future extends Rfc863Tcp$Server {
 
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
         try (var server = AsynchronousServerSocketChannel.open()) { // IOException

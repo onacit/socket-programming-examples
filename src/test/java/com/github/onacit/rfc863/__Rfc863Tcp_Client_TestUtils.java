@@ -12,14 +12,14 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 final class __Rfc863Tcp_Client_TestUtils {
 
-    static Class<? extends _Rfc863Tcp_Client> randomClientClass() {
+    static Class<? extends Rfc863Tcp$Client> randomClientClass() {
         assert !__Rfc863Tcp_Client_TestConstants.CLIENT_CLASSES.isEmpty();
         return __Rfc863Tcp_Client_TestConstants.CLIENT_CLASSES.get(
                 ThreadLocalRandom.current().nextInt(__Rfc863Tcp_Client_TestConstants.CLIENT_CLASSES.size())
         );
     }
 
-    static void startClientAndQuitIn(final Class<? extends _Rfc863Tcp_Client> clientClass, final Duration duration) {
+    static void startClientAndQuitIn(final Class<? extends Rfc863Tcp$Client> clientClass, final Duration duration) {
         Objects.requireNonNull(clientClass, "clientClass is null");
         Objects.requireNonNull(duration, "duration is null");
         if (duration.isZero() || duration.isNegative()) {
@@ -73,7 +73,7 @@ final class __Rfc863Tcp_Client_TestUtils {
     }
 
     static void startRandomClientAndQuitIn(final Duration duration) {
-        final Class<? extends _Rfc863Tcp_Client> clientClass = randomClientClass();
+        final Class<? extends Rfc863Tcp$Client> clientClass = randomClientClass();
         startClientAndQuitIn(clientClass, duration);
     }
 

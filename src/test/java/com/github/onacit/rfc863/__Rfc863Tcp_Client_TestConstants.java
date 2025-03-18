@@ -4,7 +4,7 @@ import java.util.List;
 
 final class __Rfc863Tcp_Client_TestConstants {
 
-    static final List<Class<? extends _Rfc863Tcp_Client>> CLIENT_CLASSES = List.of(
+    static final List<Class<? extends Rfc863Tcp$Client>> CLIENT_CLASSES = List.of(
             Rfc863Tcp1Client_Socket.class,
             Rfc863Tcp2Client_SocketChannel_Blocking.class,
             Rfc863Tcp3Client_SocketChannel_NonBlocking.class,

@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc863Udp2Client_DatagramChannel_Blocking extends _Rfc863Udp_Client {
+class Rfc863Udp2Client_DatagramChannel_Blocking extends Rfc863Udp$Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = DatagramChannel.open()) { // IOException

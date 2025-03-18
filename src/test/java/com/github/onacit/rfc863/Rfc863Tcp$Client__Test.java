@@ -13,9 +13,9 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
-abstract class _Rfc863Tcp_Client__Test<T extends _Rfc863Tcp_Client> {
+abstract class Rfc863Tcp$Client__Test<T extends Rfc863Tcp$Client> {
 
-    _Rfc863Tcp_Client__Test(final Class<T> clientClass) {
+    Rfc863Tcp$Client__Test(final Class<T> clientClass) {
         super();
         this.clientClass = Objects.requireNonNull(clientClass, "clientClass is null");
     }

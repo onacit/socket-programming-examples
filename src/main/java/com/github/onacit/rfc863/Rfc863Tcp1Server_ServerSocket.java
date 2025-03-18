@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
 @Slf4j
-class Rfc863Tcp1Server_ServerSocket extends _Rfc863Tcp_Server {
+class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
 
     public static void main(final String... args) throws IOException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor();
