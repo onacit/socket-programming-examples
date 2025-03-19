@@ -18,26 +18,25 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var server = AsynchronousServerSocketChannel.open()) {
             assert server.isOpen();
-
-            {
-                try {
-                    server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
-                } catch (final IOException ioe) {
-                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, ioe);
-                }
-                try {
-                    server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE);
-                } catch (final IOException ioe) {
-                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, ioe);
-                }
+            // -------------------------------------------------------------------------------------- reuse address/port
+            try {
+                server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
+            } catch (final UnsupportedOperationException uhe) {
+                // empty
             }
-
+            try {
+                server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
+            } catch (final UnsupportedOperationException uhe) {
+                // empty
+            }
+            // ---------------------------------------------------------------------------------------------------- bind
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException
             log.info("bound to {}", server.getLocalAddress());
-
+            // ---------------------------------------------------------------------------------------------------------
             final var latch = new CountDownLatch(1);
+            // ----------------------------------------------------------------- read 'quit', and count down the <latch>
             __Utils.readQuitAndRun(false, latch::countDown);
-
+            // -------------------------------------------------------------------------------------------------- accept
             server.accept( // @formatter:off
                     null,                       // <attachment>
                     new CompletionHandler<>() { // <handler>
@@ -55,13 +54,13 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                                 }
                                 remoteAddress = rs;
                             }
-                            {
-                                try {
-                                    client.shutdownOutput();
-                                } catch (final IOException ioe) {
-                                    throw new RuntimeException("failed to shutdown output", ioe);
-                                }
+                            // ------------------------------------------------------------------------- shutdown output
+                            try {
+                                client.shutdownOutput();
+                            } catch (final IOException ioe) {
+                                throw new RuntimeException("failed to shutdown output", ioe);
                             }
+                            // ------------------------------------------------------------------------------------ read
                             final var dst = ByteBuffer.allocate(1);
                             client.read(
                                     dst,                        // <dst>
@@ -77,9 +76,10 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                                                 return;
                                             }
                                             assert r == 1; // why?
-                                            log.debug("discarding 0x{} received from {}",
-                                                      String.format("%1$02X", dst.get(0)),
+                                            log.debug("discarding {} received from {}",
+                                                      String.format("0x%1$02X", dst.get(0)),
                                                       remoteAddress);
+                                            // ------------------------------------------------------------ keep reading
                                             client.read(
                                                     dst.clear(), // <dst>
                                                     null,        // <attachment>
