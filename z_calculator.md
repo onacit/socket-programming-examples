@@ -13,7 +13,7 @@ Format
 |            Operator              |
 |                                  |
 |-------+--------+--------+--------|
-|            Operand               |
+|             Operand              |
 |                                  |
 |-------+--------+--------+--------|
 
@@ -36,6 +36,7 @@ Operator is a 64-bit US-ASCII word.
 Operand is a IEEE 754 double precision floating point value.
 Operand1 and Operand2 are both IEEE 754 single precision floating point value.
 ```
+
 ### Response message format
 
 ```text
@@ -47,7 +48,7 @@ Format
 |            Operator              |
 |                                  |
 |-------+--------+--------+--------|
-|            Operand               |
+|             Operand              |
 |                                  |
 |-------+--------+--------+--------|
 |             Result               |
@@ -77,17 +78,18 @@ Result is a IEEE 754 double precision floating point value.
 
 ## Operators
 
-| `Operator`             | `Result` should be                               | notes                                               |
-|------------------------|--------------------------------------------------|-----------------------------------------------------|
-| <code>ADD&nbsp;</code> | the sum of two operands                          |                                                     |
-| <code>SUB&nbsp;</code> | the difference between two operands              |                                                     |
-| <code>MUL&nbsp;</code> | the value of `Operand1` multiplied by `Operand2` |                                                     |
-| <code>DIV&nbsp;</code> | the quotient of `Operand1 / Operand2`            | `Result` should be zero when the `Operand2` is zero |
+| `Operator`            | `Result` should be           | notes                                               |
+|-----------------------|------------------------------|-----------------------------------------------------|
+| <code>IDENTITY</code> | $`Operanad`$                 |                                                     |
+| <code>ADD</code>      | $`Operand1 + Operand2`$      |                                                     |
+| <code>SUB</code>      | $`Operand1 - Operand2`$      |                                                     |
+| <code>MUL</code>      | $`Operand1 \times Operand2`$ |                                                     |
+| <code>DIV</code>      | $`Operand1 \div Operand2`$   | `Result` should be zero when the `Operand2` is zero |
+| <code>MOD</code>      | $`Operand1 \bmod Operand2`$  | `Result` should be zero when the `Operand2` is zero |
 
 ### More operators
 
-| `Operator`             | `Result` should be                     | notes                                               |
-|------------------------|----------------------------------------|-----------------------------------------------------|
-| <code>MOD&nbsp;</code> | the remainder of `Operand1 / Operand2` | `Result` should be zero when the `Operand2` is zero |
-| <code>SQRT</code>      | the square root of `Operand`           |                                                     |
+| `Operator`        | `Result` should be | notes |
+|-------------------|--------------------|-------|
+| <code>SQRT</code> | $`\sqrt{Operand}`$ |       |
 

@@ -1,6 +1,13 @@
 package com.github.onacit.z_calculator;
 
-public enum _Operator {
+enum _Operator {
+
+    IDENTITY() {
+        @Override
+        double operate(final float operand1, final float operand2) {
+            return _Operator.operand(operand1, operand2);
+        }
+    },
 
     ADD() {
         @Override
