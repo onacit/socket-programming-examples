@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class Message {
+public class _Message {
 
     // -----------------------------------------------------------------------------------------------------------------
     static final int OFFSET_OPERATOR = 0;
@@ -20,7 +20,7 @@ public class Message {
     static final int LENGTH_OPERAND1 = Float.BYTES;
 
     // -----------------------------------------------------------------------------------------------------------------
-    static final int OFFSET_OPERAND2 = OFFSET_OPERAND1 + LENGTH_OPERAND1
+    static final int OFFSET_OPERAND2 = OFFSET_OPERAND1 + LENGTH_OPERAND1;
 
     static final int LENGTH_OPERAND2 = Float.BYTES;
 
@@ -37,125 +37,71 @@ public class Message {
     // -----------------------------------------------------------------------------------------------------------------
     static final int BYTES = LENGTH_OPERATOR + LENGTH_OPERAND + LENGTH_RESULT;
 
-    // -----------------------------------------------------------------------------------------------------------------
-    public enum Operator {
-
-        ADD() {
-            @Override
-            double operate(final float operand1, final float operand2) {
-                return (double) operand1 + operand2;
-            }
-        },
-
-        SUB() {
-            @Override
-            double operate(final float operand1, final float operand2) {
-                return (double) operand1 - operand2;
-            }
-        },
-
-        MUL() {
-            @Override
-            double operate(final float operand1, final float operand2) {
-                return (double) operand1 * operand2;
-            }
-        },
-
-        DIV() {
-            @Override
-            double operate(final float operand1, final float operand2) {
-                if (operand2 == .0f) {
-                    return .0d;
-                }
-                return (double) operand1 / operand2;
-            }
-        },
-
-        MOD() {
-            @Override
-            double operate(final float operand1, final float operand2) {
-                if (operand2 == .0f) {
-                    return .0d;
-                }
-                return (double) operand1 % operand2;
-            }
-        },
-
-        SQRT() {
-            @Override
-            double operate(final float operand1, final float operand2) {
-                return Math.sqrt(operand(operand1, operand2));
-            }
-        };
-
-        private static double operand(float operand1, float operand2) {
-            return ((long) Float.floatToRawIntBits(operand1) << Integer.SIZE) | Float.floatToRawIntBits(operand2);
-        }
-
-        Operator() {
-        }
-
-        abstract double operate(float operand1, float operand2);
-    }
-
     // -------------------------------------------------------------------------------------------------------- operator
-    public Operator operator() {
+    public _Operator operator() {
         final var bytes = new byte[LENGTH_OPERATOR];
-        buffer.get(OFFSET_OPERATOR, bytes);
+        operatorBuffer.get(0, bytes);
         final var name = new String(bytes, StandardCharsets.UTF_8).strip();
-        return Operator.valueOf(name); // IllegalArgumentException
+        try {
+            return _Operator.valueOf(name); // IllegalArgumentException
+        } catch (final IllegalArgumentException iae) {
+            return null;
+        }
     }
 
-    public Message operator(final Operator operator) {
+    public _Message operator(final _Operator operator) {
         Objects.requireNonNull(operator, "operator is null");
         final var name = operator.name();
         final var bytes = Arrays.copyOf(name.getBytes(StandardCharsets.UTF_8), LENGTH_OPERATOR);
-        buffer.put(OFFSET_OPERATOR, bytes);
+        operatorBuffer.put(0, bytes);
         return this;
     }
 
     // -------------------------------------------------------------------------------------------------------- operand1
     public float operand1() {
-        return operand1Buffer.get();
+        return operand1Buffer.get(0);
     }
 
-    public Message operand1(final float operand1) {
-        operand1Buffer.put(operand1);
+    public _Message operand1(final float operand1) {
+        operand1Buffer.put(0, operand1);
         return this;
     }
 
     // -------------------------------------------------------------------------------------------------------- operand2
     public float operand2() {
-        return operand2Buffer.get();
+        return operand2Buffer.get(0);
     }
 
-    public Message operand2(final float operand2) {
-        operand2Buffer.put(operand2);
+    public _Message operand2(final float operand2) {
+        operand2Buffer.put(0, operand2);
         return this;
     }
 
     // --------------------------------------------------------------------------------------------------------- operand
     public double operand() {
-        return operandBuffer.get();
+        return operandBuffer.get(0);
     }
 
-    public Message operand(final double operand) {
-        operandBuffer.put(operand);
+    public _Message operand(final double operand) {
+        operandBuffer.put(0, operand);
         return this;
     }
 
     // ---------------------------------------------------------------------------------------------------------- result
     public double result() {
-        return resultBuffer.get();
+        return resultBuffer.get(0);
     }
 
-    public Message result(final double result) {
-        resultBuffer.put(result);
+    public _Message result(final double result) {
+        resultBuffer.put(0, result);
         return this;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
     private final ByteBuffer buffer = ByteBuffer.allocate(BYTES);
+
+    // -----------------------------------------------------------------------------------------------------------------
+    private final ByteBuffer operatorBuffer = buffer.slice(OFFSET_OPERATOR, LENGTH_OPERATOR);
 
     private final FloatBuffer operand1Buffer = buffer.slice(OFFSET_OPERAND1, LENGTH_OPERAND1).asFloatBuffer();
 
