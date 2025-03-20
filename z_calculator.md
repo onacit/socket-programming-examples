@@ -78,14 +78,28 @@ Result is a IEEE 754 double precision floating point value.
 
 ## Operators
 
-| `Operator`            | `Result` should be           | notes                                               |
-|-----------------------|------------------------------|-----------------------------------------------------|
-| <code>IDENTITY</code> | $`Operanad`$                 |                                                     |
-| <code>ADD</code>      | $`Operand1 + Operand2`$      |                                                     |
-| <code>SUB</code>      | $`Operand1 - Operand2`$      |                                                     |
-| <code>MUL</code>      | $`Operand1 \times Operand2`$ |                                                     |
-| <code>DIV</code>      | $`Operand1 \div Operand2`$   | `Result` should be zero when the `Operand2` is zero |
-| <code>MOD</code>      | $`Operand1 \bmod Operand2`$  | `Result` should be zero when the `Operand2` is zero |
+| `Operator`            | `Result` should be           | notes                                                          |
+|-----------------------|------------------------------|----------------------------------------------------------------|
+| <code>IDENTITY</code> | $`Operanad`$                 |                                                                |
+| <code>ADD</code>      | $`Operand1 + Operand2`$      |                                                                |
+| <code>SUB</code>      | $`Operand1 - Operand2`$      |                                                                |
+| <code>MUL</code>      | $`Operand1 \times Operand2`$ |                                                                |
+| <code>DIV</code>      | $`Operand1 \div Operand2`$   | should be $`\mathbf{0}`$ when the `Operand2` is $`\mathbf{0}`$ |
+| <code>MOD</code>      | $`Operand1 \bmod Operand2`$  | should be $`\mathbf{0}`$ when the `Operand2` is $`\mathbf{0}`$ |
+
+$`\mathbf{0}`$
+
+$`\infty`$
+
+$`\c_undefined_fp`$
+
+$`\fp_if_undefined:N(TF)`$
+
+$`NaN`$
+
+$`df.fillna('NaN')`$
+
+
 
 ### More operators
 
