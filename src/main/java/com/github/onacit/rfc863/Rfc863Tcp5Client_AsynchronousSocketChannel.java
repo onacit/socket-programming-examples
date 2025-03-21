@@ -8,6 +8,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
+import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -18,10 +20,20 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
     public static void main(final String... args) throws IOException, InterruptedException {
         final var group = AsynchronousChannelGroup.withFixedThreadPool(1, Executors.defaultThreadFactory());
         try (var client = AsynchronousSocketChannel.open(group)) { // IOException
+            // ----------------------------------------------------------------------------------------- prepare a latch
+            final var latch = new CountDownLatch(1);
             // --------------------------------------------------- read 'quit', close the <client>, shutdown the <group>
             __Utils.readQuitAndCall(true, () -> {
-                client.close();
-                group.shutdown();
+                try {
+                    group.shutdownNow(); // IOException
+                    final var duration = Duration.ofSeconds(4L);
+                    final var terminated = group.awaitTermination(duration.getSeconds(), TimeUnit.SECONDS);
+                    if (!terminated) {
+                        log.error("not terminated in {}", duration);
+                    }
+                } finally {
+                    latch.countDown();
+                }
                 return null;
             });
             // --------------------------------------------------------------------------------- connect, asynchronously
@@ -47,15 +59,19 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
                                     new CompletionHandler<>() { // <handler>
                                         @Override
                                         public void completed(final Integer result, final Object attachment) {
-                                            if (group.isShutdown()) {
-                                                return;
-                                            }
                                             if (_Constants.THROTTLE) {
                                                 try {
                                                     Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
                                                 } catch (final InterruptedException ie) {
+                                                    log.error("interrupted while sleeping", ie);
                                                     Thread.currentThread().interrupt();
-                                                    failed(ie, attachment);
+                                                    try {
+                                                        client.close();
+                                                    } catch (final IOException ioe) {
+                                                        log.error("failed to close socket", ioe);
+                                                    }
+                                                    group.shutdown();
+                                                    latch.countDown();
                                                     return;
                                                 }
                                             }
@@ -73,24 +89,22 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
                                                 log.error("failed to close socket", ioe);
                                             }
                                             group.shutdown();
+                                            latch.countDown();
                                         }
                                     }
                             );
                         }
                         @Override public void failed(final Throwable exc, final Object attachment) {
                             log.error("failed to connect", exc);
-                            try {
-                                client.close();
-                            } catch (final IOException ioe) {
-                                log.error("failed to close socket", ioe);
-                            }
                             group.shutdown();
+                            latch.countDown();
                         }
                     } // @formatter:on
             );
             // -------------------------------------------------------------------------- await <group> to be terminated
-            final var terminated = group.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); // InterruptedException
-            assert terminated;
+//            final var terminated = group.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); // InterruptedException
+//            assert terminated;
+            latch.await();
         }
     }
 }

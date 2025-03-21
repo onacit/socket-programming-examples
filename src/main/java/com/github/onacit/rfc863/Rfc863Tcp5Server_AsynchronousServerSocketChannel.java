@@ -11,6 +11,8 @@ import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
+import java.time.Duration;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -35,12 +37,16 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException
             log.info("bound to {}", server.getLocalAddress());
             // --------------------------------------------------------------------------------------- prepare a <latch>
-//            final var latch = new CountDownLatch(1);
-            // ----------------------------------------------------------------- read 'quit', and count down the <latch>
-//            __Utils.readQuitAndRun(false, latch::countDown);
+            final var latch = new CountDownLatch(1);
+            // ------------------------------------------------------ read 'quit', shutdown/await <group>, break <latch>
             __Utils.readQuitAndCall(true, () -> {
-                server.close();
-                group.shutdown();
+                group.shutdownNow();
+                final var duration = Duration.ofSeconds(4L);
+                final var terminated = group.awaitTermination(duration.getSeconds(), TimeUnit.SECONDS);
+                if (!terminated) {
+                    log.error("not terminated in {}", duration);
+                }
+                latch.countDown();
                 return null;
             });
             // -------------------------------------------------------------------------------------------------- accept
@@ -82,14 +88,14 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                                                           remoteAddress
                                                 );
                                             }
-                                            if (group.isShutdown()) {
-                                                try {
-                                                    client.close();
-                                                } catch (final IOException ioe) {
-                                                    log.error("failed to close " + client, ioe);
-                                                }
-                                                return;
-                                            }
+//                                            if (group.isShutdown()) {
+//                                                try {
+//                                                    client.close();
+//                                                } catch (final IOException ioe) {
+//                                                    log.error("failed to close " + client, ioe);
+//                                                }
+//                                                return;
+//                                            }
                                             // ------------------------------------------------------------ keep reading
                                             client.read(
                                                     dst.clear(), // <dst>
@@ -118,9 +124,11 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                         }
                     }
             ); // @formatter:on
-            // -------------------------------------------------------------------------- await <group> to be terminated
-            final var terminated = group.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); // InterruptedException
-            assert terminated;
+            // --------------------------------------------------------------------------await < group > to be terminated
+//            final var terminated = group.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); // InterruptedException
+//            assert terminated;
+            // ------------------------------------------------------------------------------------------- await <latch>
+            latch.await(); // InterruptedException
         }
     }
 }

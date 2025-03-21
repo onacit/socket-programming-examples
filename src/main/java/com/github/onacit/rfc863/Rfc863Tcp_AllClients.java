@@ -33,16 +33,17 @@ class Rfc863Tcp_AllClients {
                         }
                     })
                     .peek(p -> {
-                        log.debug("process: {}", p.info());
+                        log.debug("process: {}; {}", p, p.info());
                     })
                     .toList();
+            log.debug("----------------------------------------------------------------------------------------------");
             __Utils.readQuitAndRun(true, () -> {
                 processes.forEach(p -> {
                     try {
                         p.getOutputStream().write("quit\r\n".getBytes());
                         p.getOutputStream().flush();
                     } catch (final IOException ioe) {
-                        throw new RuntimeException("failed to write quit to " + p, ioe);
+                        throw new RuntimeException("failed to write 'quit' to " + p, ioe);
                     }
                 });
 //                processes.forEach(p -> {
