@@ -38,7 +38,7 @@ class Rfc864TcpAllClients {
                         p.getOutputStream().write("quit\r\n".getBytes());
                         p.getOutputStream().flush();
                     } catch (final IOException ioe) {
-                        throw new RuntimeException("failed to write quit to " + p, ioe);
+                        throw new RuntimeException("failed to write quit to " + p.info(), ioe);
                     }
                 });
                 processes.forEach(p -> {

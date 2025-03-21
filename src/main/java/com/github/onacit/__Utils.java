@@ -165,7 +165,7 @@ public final class __Utils {
     }
 
     /**
-     * Randomizes specified buffer's position and limit.
+     * Randomizes specified buffer's {@code position} and {@code limit}.
      *
      * @param buffer the buffer.
      * @param <T>    buffer type parameter
@@ -173,13 +173,18 @@ public final class __Utils {
      */
     public static <T extends ByteBuffer> T randomizeRemaining(final T buffer) {
         Objects.requireNonNull(buffer, "buffer is null");
-        buffer.position(buffer.position() + ThreadLocalRandom.current().nextInt(buffer.remaining() + 1));
-        buffer.limit(buffer.limit() - ThreadLocalRandom.current().nextInt(buffer.remaining() + 1));
+
+//        buffer.position(buffer.position() + ThreadLocalRandom.current().nextInt(buffer.remaining() + 1));
+//        buffer.limit(buffer.limit() - ThreadLocalRandom.current().nextInt(buffer.remaining() + 1));
+
+        buffer.limit(ThreadLocalRandom.current().nextInt(buffer.capacity() + 1));
+        buffer.position(ThreadLocalRandom.current().nextInt(buffer.remaining() + 1));
+
         return buffer;
     }
 
     /**
-     * Randomizes specified buffer's position, limit, and its content between the new range.
+     * Randomizes specified buffer's {@code position}, {@code limit}, and its content between the new available range.
      *
      * @param buffer the buffer.
      * @param <T>    buffer type parameter

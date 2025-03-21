@@ -18,40 +18,38 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
 
     public static void main(final String... args) throws IOException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor();
-             var server = new ServerSocket()) {
-            {
-                try {
-                    server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
-                } catch (final UnsupportedOperationException uoe) {
-                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, uoe);
-                }
-                try {
-                    server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
-                } catch (final UnsupportedOperationException uoe) {
-                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, uoe);
-                }
-                server.setReuseAddress(true); // SocketException
+             var server = new ServerSocket()) { // IOException
+            // -------------------------------------------------------------------------------------- reuse address/port
+            try {
+                server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
+            } catch (final UnsupportedOperationException uoe) {
+                // empty
             }
-            {
-                assert !server.isBound();
-                server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException
-                log.info("bound to {}", server.getLocalSocketAddress());
-                assert server.isBound();
+            try {
+                server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
+            } catch (final UnsupportedOperationException uoe) {
+                // empty
             }
-            {
-                __Utils.readQuitAndClose(true, server);
-            }
+            server.setReuseAddress(true); // SocketException
+            // ---------------------------------------------------------------------------------------------------- bind
+            assert !server.isBound();
+            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException
+            assert server.isBound();
+            log.info("bound to {}", server.getLocalSocketAddress());
+            // --------------------------------------------------------------------- read 'quit', and close the <server>
+            __Utils.readQuitAndClose(true, server);
+            // ------------------------------------------------------------------------------------------ keep accepting
             while (!server.isClosed()) {
                 final var client = server.accept(); // IOException
                 executor.submit(() -> {
                     try {
-                        log.debug("accepted from {}", client.getRemoteSocketAddress());
+                        final var remoteAddress = client.getRemoteSocketAddress();
+                        log.debug("accepted from {}", remoteAddress);
                         for (int b; (b = client.getInputStream().read()) != -1 && !server.isClosed(); ) { // IOException
-                            log.debug("discarding {} received from {}", String.format("0x%1$02X", b),
-                                      client.getRemoteSocketAddress());
+                            log.debug("discarding {} received from {}", String.format("0x%1$02X", b), remoteAddress);
                         }
                     } finally {
-                        client.close();
+                        client.close(); // IOException
                     }
                     return null;
                 });

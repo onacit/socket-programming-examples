@@ -7,18 +7,20 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server {
 
     public static void main(final String... args) throws IOException, InterruptedException {
-        try (var server = AsynchronousServerSocketChannel.open()) {
-            assert server.isOpen();
-            // -------------------------------------------------------------------------------------- reuse address/port
+        final var group = AsynchronousChannelGroup.withThreadPool(Executors.newVirtualThreadPerTaskExecutor());
+        try (var server = AsynchronousServerSocketChannel.open(group)) { // IOException
+            // ------------------------------------------------------------------------------- try to reuse address/port
             try {
                 server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
             } catch (final UnsupportedOperationException uhe) {
@@ -32,10 +34,15 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
             // ---------------------------------------------------------------------------------------------------- bind
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException
             log.info("bound to {}", server.getLocalAddress());
-            // ---------------------------------------------------------------------------------------------------------
-            final var latch = new CountDownLatch(1);
+            // --------------------------------------------------------------------------------------- prepare a <latch>
+//            final var latch = new CountDownLatch(1);
             // ----------------------------------------------------------------- read 'quit', and count down the <latch>
-            __Utils.readQuitAndRun(false, latch::countDown);
+//            __Utils.readQuitAndRun(false, latch::countDown);
+            __Utils.readQuitAndCall(true, () -> {
+                server.close();
+                group.shutdown();
+                return null;
+            });
             // -------------------------------------------------------------------------------------------------- accept
             server.accept( // @formatter:off
                     null,                       // <attachment>
@@ -43,68 +50,77 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                         @Override
                         public void completed(final AsynchronousSocketChannel client, final Object attachment) {
                             final SocketAddress remoteAddress;
-                            {
-                                SocketAddress rs;
-                                try {
-                                    rs = client.getRemoteAddress();
-                                    log.debug("accepted from {}", client.getRemoteAddress());
-                                } catch (final IOException ioe) {
-                                    log.error("failed to get remote address of {}", client);
-                                    rs = null;
-                                }
-                                remoteAddress = rs;
+                            try {
+                                remoteAddress = client.getRemoteAddress(); // IOException
+                            } catch (final IOException ioe) {
+                                failed(ioe, attachment);
+                                return;
                             }
+                            log.debug("accepted from {}", remoteAddress);
                             // ------------------------------------------------------------------------- shutdown output
                             try {
-                                client.shutdownOutput();
+                                client.shutdownOutput(); // IOException
                             } catch (final IOException ioe) {
-                                throw new RuntimeException("failed to shutdown output", ioe);
+                                failed(ioe, attachment);
+                                return;
                             }
                             // ------------------------------------------------------------------------------------ read
                             final var dst = ByteBuffer.allocate(1);
                             client.read(
                                     dst,                        // <dst>
-                                    null,                       // <attachment>
+                                    remoteAddress,              // <attachment>
                                     new CompletionHandler<>() { // <handler>
-                                        @Override public void completed(final Integer r, final Object attachment) {
+                                        @Override
+                                        public void completed(final Integer r, final SocketAddress attachment) {
                                             if (r == -1) {
+                                                assert !client.isOpen();
+                                                return;
+                                            }
+                                            for (dst.flip(); dst.hasRemaining();) {
+                                                log.debug("discarding {} received from {}",
+                                                          String.format("0x%02X", dst.get()),
+                                                          remoteAddress
+                                                );
+                                            }
+                                            if (group.isShutdown()) {
                                                 try {
                                                     client.close();
                                                 } catch (final IOException ioe) {
-                                                    throw new RuntimeException("failed to close " + client, ioe);
+                                                    log.error("failed to close " + client, ioe);
                                                 }
                                                 return;
                                             }
-                                            assert r == 1; // why?
-                                            log.debug("discarding {} received from {}",
-                                                      String.format("0x%1$02X", dst.get(0)),
-                                                      remoteAddress);
                                             // ------------------------------------------------------------ keep reading
                                             client.read(
                                                     dst.clear(), // <dst>
-                                                    null,        // <attachment>
+                                                    attachment,  // <attachment>
                                                     this         // <handler>
                                             );
                                         }
-                                        @Override public void failed(final Throwable exc, final Object attachment) {
+                                        @Override
+                                        public void failed(final Throwable exc, final SocketAddress attachment) {
                                             log.error("failed to read", exc);
                                             try {
                                                 client.close();
                                             } catch (final IOException ioe) {
-                                                throw new RuntimeException("failed to close " + client, ioe);
+                                                log.error("failed to close " + client, ioe);
                                             }
                                         }
                                     }
                             );
-                            server.accept(null, this);
+                            server.accept(
+                                    null, // <attachment>
+                                    this  // <handler>
+                            );
                         }
                         @Override public void failed(final Throwable exc, final Object attachment) {
                             log.error("failed to accept", exc);
                         }
                     }
             ); // @formatter:on
-
-            latch.await(); // InterruptedException
+            // -------------------------------------------------------------------------- await <group> to be terminated
+            final var terminated = group.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); // InterruptedException
+            assert terminated;
         }
     }
 }

@@ -4,6 +4,8 @@ import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -16,16 +18,21 @@ import java.util.concurrent.ThreadLocalRandom;
 class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
-        try (var client = new Socket()) {
-
+        try (var client = new Socket()) { // -> close() -> IOException
+            // ----------------------------------------------------------------------------------------- bind (optional)
             assert !client.isBound();
+            if (ThreadLocalRandom.current().nextBoolean()) {
+                client.bind(new InetSocketAddress(InetAddress.getLocalHost(), 0));
+                assert client.isBound();
+            }
+            // ------------------------------------------------------------------------------------------------- connect
             assert !client.isConnected();
             client.connect(_Constants.SERVER_ENDPOINT); // IOException
-            assert client.isBound();
             assert client.isConnected();
+            assert client.isBound(); // !!!
             log.debug("connected to {}, through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
-
-            {
+            // ------------------------------------------------------------------------------- shutdown input (optional)
+            if (ThreadLocalRandom.current().nextBoolean()) {
                 client.shutdownInput(); // IOException
                 try { // TODO: remove
                     client.getInputStream().read(); // IOException
@@ -34,12 +41,14 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
                     // expected
                 }
             }
-
+            // ------------------------------------------------------------------------- read `quit`, and close <client>
             __Utils.readQuitAndClose(true, client);
-
+            // -------------------------------------------------------------------------------------- write random bytes
             while (!client.isClosed()) {
                 client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // IOException
-                Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
+                if (_Constants.THROTTLE) {
+                    Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
+                }
             }
         }
     }
