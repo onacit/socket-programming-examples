@@ -5,42 +5,33 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
-import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
+/**
+ * .
+ *
+ * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
+ * @see <a href="https://bit.ly/4kEo35j">java.nio.channels.AsynchronousChannelGroup</a>
+ * @see <a href="https://bit.ly/4kKw08Y">java.nio.channels.AsynchronousServerSocket</a>
+ * @see <a href="https://bit.ly/4ihblHX">java.nio.channels.AsynchronousSocket</a>
+ */
 @Slf4j
 class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
-        final var group = AsynchronousChannelGroup.withFixedThreadPool(1, Executors.defaultThreadFactory());
-        try (var client = AsynchronousSocketChannel.open(group)) { // IOException
+        try (var client = AsynchronousSocketChannel.open()) { // IOException
             // ----------------------------------------------------------------------------------------- prepare a latch
             final var latch = new CountDownLatch(1);
-            // --------------------------------------------------- read 'quit', close the <client>, shutdown the <group>
-            __Utils.readQuitAndCall(true, () -> {
-                try {
-                    group.shutdownNow(); // IOException
-                    final var duration = Duration.ofSeconds(4L);
-                    final var terminated = group.awaitTermination(duration.getSeconds(), TimeUnit.SECONDS);
-                    if (!terminated) {
-                        log.error("not terminated in {}", duration);
-                    }
-                } finally {
-                    latch.countDown();
-                }
-                return null;
-            });
+            // ------------------------------------------------------------------------------ read 'quit', break <latch>
+            __Utils.readQuitAndRun(true, latch::countDown);
             // --------------------------------------------------------------------------------- connect, asynchronously
-            client.connect( // @formatter:off
+            client.connect(
                     _Constants.SERVER_ENDPOINT, // <remote>
                     null,                       // <attachment>
-                    new CompletionHandler<>() { // <handler>
+                    new CompletionHandler<>() { // <handler> // @formatter:off
                         @Override public void completed(final Void result, final Object attachment) {
                             try {
                                 log.debug("connected to {}, through {}",
@@ -57,38 +48,20 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
                                     __Utils.randomize(src),     // <src>
                                     null,                       // <attachment>
                                     new CompletionHandler<>() { // <handler>
-                                        @Override
-                                        public void completed(final Integer result, final Object attachment) {
+                                        @Override public void completed(final Integer result, final Object attachment) {
                                             if (_Constants.THROTTLE) {
                                                 try {
                                                     Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
                                                 } catch (final InterruptedException ie) {
-                                                    log.error("interrupted while sleeping", ie);
                                                     Thread.currentThread().interrupt();
-                                                    try {
-                                                        client.close();
-                                                    } catch (final IOException ioe) {
-                                                        log.error("failed to close socket", ioe);
-                                                    }
-                                                    group.shutdown();
-                                                    latch.countDown();
+                                                    failed(ie, attachment);
                                                     return;
                                                 }
                                             }
-                                            client.write(
-                                                    __Utils.randomize(src.clear()), // <src>
-                                                    null,                           // <attachment>
-                                                    this                            // <handler>
-                                            );
+                                            client.write(__Utils.randomize(src), null, this);
                                         }
                                         @Override public void failed(final Throwable exc, final Object attachment) {
                                             log.error("failed to write", exc);
-                                            try {
-                                                client.close();
-                                            } catch (final IOException ioe) {
-                                                log.error("failed to close socket", ioe);
-                                            }
-                                            group.shutdown();
                                             latch.countDown();
                                         }
                                     }
@@ -96,14 +69,11 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
                         }
                         @Override public void failed(final Throwable exc, final Object attachment) {
                             log.error("failed to connect", exc);
-                            group.shutdown();
                             latch.countDown();
-                        }
-                    } // @formatter:on
+                        } // @formatter:on
+                    }
             );
-            // -------------------------------------------------------------------------- await <group> to be terminated
-//            final var terminated = group.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); // InterruptedException
-//            assert terminated;
+            // ------------------------------------------------------------------------------------------- await <latch>
             latch.await();
         }
     }

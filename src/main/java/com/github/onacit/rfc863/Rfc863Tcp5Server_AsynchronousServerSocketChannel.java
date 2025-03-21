@@ -7,21 +7,24 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
-import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
+/**
+ * .
+ *
+ * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
+ * @see <a href="https://bit.ly/4kEo35j">java.nio.channels.AsynchronousChannelGroup</a>
+ * @see <a href="https://bit.ly/4kKw08Y">java.nio.channels.AsynchronousServerSocket</a>
+ * @see <a href="https://bit.ly/4ihblHX">java.nio.channels.AsynchronousSocket</a>
+ */
 @Slf4j
 class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server {
 
     public static void main(final String... args) throws IOException, InterruptedException {
-        final var group = AsynchronousChannelGroup.withThreadPool(Executors.newVirtualThreadPerTaskExecutor());
-        try (var server = AsynchronousServerSocketChannel.open(group)) { // IOException
+        try (var server = AsynchronousServerSocketChannel.open()) { // IOException
             // ------------------------------------------------------------------------------- try to reuse address/port
             try {
                 server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
@@ -38,21 +41,12 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
             log.info("bound to {}", server.getLocalAddress());
             // --------------------------------------------------------------------------------------- prepare a <latch>
             final var latch = new CountDownLatch(1);
-            // ------------------------------------------------------ read 'quit', shutdown/await <group>, break <latch>
-            __Utils.readQuitAndCall(true, () -> {
-                group.shutdownNow();
-                final var duration = Duration.ofSeconds(4L);
-                final var terminated = group.awaitTermination(duration.getSeconds(), TimeUnit.SECONDS);
-                if (!terminated) {
-                    log.error("not terminated in {}", duration);
-                }
-                latch.countDown();
-                return null;
-            });
+            // ------------------------------------------------------------------------------ read 'quit', break <latch>
+            __Utils.readQuitAndRun(true, latch::countDown);
             // -------------------------------------------------------------------------------------------------- accept
-            server.accept( // @formatter:off
+            server.accept(
                     null,                       // <attachment>
-                    new CompletionHandler<>() { // <handler>
+                    new CompletionHandler<>() { // <handler> // @formatter:off
                         @Override
                         public void completed(final AsynchronousSocketChannel client, final Object attachment) {
                             final SocketAddress remoteAddress;
@@ -63,7 +57,7 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                                 return;
                             }
                             log.debug("accepted from {}", remoteAddress);
-                            // ------------------------------------------------------------------------- shutdown output
+                            // ------------------------------------------------------------------ try to shutdown output
                             try {
                                 client.shutdownOutput(); // IOException
                             } catch (final IOException ioe) {
@@ -72,6 +66,7 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                             }
                             // ------------------------------------------------------------------------------------ read
                             final var dst = ByteBuffer.allocate(1);
+                            assert dst.capacity() > 0;
                             client.read(
                                     dst,                        // <dst>
                                     remoteAddress,              // <attachment>
@@ -79,7 +74,6 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                                         @Override
                                         public void completed(final Integer r, final SocketAddress attachment) {
                                             if (r == -1) {
-                                                assert !client.isOpen();
                                                 return;
                                             }
                                             for (dst.flip(); dst.hasRemaining();) {
@@ -88,20 +82,7 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                                                           remoteAddress
                                                 );
                                             }
-//                                            if (group.isShutdown()) {
-//                                                try {
-//                                                    client.close();
-//                                                } catch (final IOException ioe) {
-//                                                    log.error("failed to close " + client, ioe);
-//                                                }
-//                                                return;
-//                                            }
-                                            // ------------------------------------------------------------ keep reading
-                                            client.read(
-                                                    dst.clear(), // <dst>
-                                                    attachment,  // <attachment>
-                                                    this         // <handler>
-                                            );
+                                            client.read(dst.clear(), attachment, this);
                                         }
                                         @Override
                                         public void failed(final Throwable exc, final SocketAddress attachment) {
@@ -114,20 +95,15 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                                         }
                                     }
                             );
-                            server.accept(
-                                    null, // <attachment>
-                                    this  // <handler>
-                            );
+                            server.accept(null, this);
                         }
                         @Override public void failed(final Throwable exc, final Object attachment) {
                             log.error("failed to accept", exc);
-                        }
+                            latch.countDown();
+                        } // @formatter:on
                     }
-            ); // @formatter:on
-            // --------------------------------------------------------------------------await < group > to be terminated
-//            final var terminated = group.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); // InterruptedException
-//            assert terminated;
-            // ------------------------------------------------------------------------------------------- await <latch>
+            );
+            // ------------------------------------------------------------------------------ await <latch> to be broken
             latch.await(); // InterruptedException
         }
     }
