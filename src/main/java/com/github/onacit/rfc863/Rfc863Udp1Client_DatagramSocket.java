@@ -15,7 +15,7 @@ class Rfc863Udp1Client_DatagramSocket extends Rfc863Udp$Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = new DatagramSocket(null)) { // -> close() -> IOException
-            // bind, optionally ----------------------------------------------------------------------------------------
+            // ---------------------------------------------------------------------------------------- bind, optionally
             assert !client.isBound();
             if (ThreadLocalRandom.current().nextBoolean()) {
                 client.setReuseAddress(true); // SocketException
@@ -23,19 +23,21 @@ class Rfc863Udp1Client_DatagramSocket extends Rfc863Udp$Client {
                 log.debug("bound to {}", client.getLocalSocketAddress());
                 assert client.isBound();
             }
-            // read 'quit', and close the <client> ---------------------------------------------------------------------
+            // ------------------------------------------------------------------------- read 'quit', and close <client>
             __Utils.readQuitAndClose(true, client);
-            // prepare a package ---------------------------------------------------------------------------------------
+            // ---------------------------------------------------------------------------------------- prepare a packet
             final DatagramPacket packet;
             {
                 final var buf = new byte[__Constants.UDP_PAYLOAD_MAX];
                 packet = new DatagramPacket(buf, buf.length);
                 packet.setSocketAddress(_Constants.SERVER_ENDPOINT);
             }
-            // keep randomizing/sending the <packet> -------------------------------------------------------------------
+            // ------------------------------------------------------------------ keep sending <packet> through <client>
             while (!client.isClosed()) {
-                ThreadLocalRandom.current().nextBytes(packet.getData());
-                packet.setLength(ThreadLocalRandom.current().nextInt(packet.getData().length + 1));
+                final var data = packet.getData();
+                ThreadLocalRandom.current().nextBytes(data);
+                final var length = ThreadLocalRandom.current().nextInt(packet.getData().length + 1);
+                packet.setLength(length);
                 client.send(packet); // IOException
                 Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
             }

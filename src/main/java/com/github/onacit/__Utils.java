@@ -4,10 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -190,9 +193,89 @@ public final class __Utils {
      * @param <T>    buffer type parameter
      * @return given {@code buffer}.
      */
-    public static <T extends ByteBuffer> T randomize(final T buffer) {
+    public static <T extends ByteBuffer> T randomizeAvailableAndContent(final T buffer) {
         Objects.requireNonNull(buffer, "buffer is null");
         return randomizeContent(randomizeRemaining(buffer));
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    public static Process startProcess(final String... command) {
+        Objects.requireNonNull(command, "command is null");
+        final var builder = new ProcessBuilder(command)
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT);
+        try {
+            final var process = builder.start();
+            log.debug("process: {}", process.info());
+            return process;
+        } catch (final IOException ioe) {
+            log.error("failed to start " + builder.command(), ioe);
+            return null;
+        }
+    }
+
+    public static Process startProcess(final Class<?> mainClass) {
+        return applyCommandAndClasspath(
+                (cmd, cp) -> startProcess(new String[]{cmd, "-cp", cp, mainClass.getName()})
+        );
+    }
+
+    public static void quitProcess(final Process process) {
+        Objects.requireNonNull(process, "process is null");
+        try {
+            process.getOutputStream().write("quit\r\n".getBytes());
+            process.getOutputStream().flush();
+        } catch (final IOException ioe) {
+            log.error("failed to write 'quit' to {}", process, ioe);
+            log.error("destroying, forcibly, {}", process);
+            process.destroyForcibly();
+        }
+    }
+
+    public static void waitForProcess(final Process process) {
+        Objects.requireNonNull(process, "process is null");
+        while (process.isAlive()) {
+            try {
+                final var exited = process.waitFor(1L, TimeUnit.SECONDS);
+                if (exited) {
+                    break;
+                }
+            } catch (final InterruptedException ie) {
+                log.error("interrupted while waiting for {}", process, ie);
+                process.destroyForcibly();
+            }
+        }
+    }
+
+    public static <T> void startAll(final List<Class<? extends T>> CLASSES) {
+        final var latch = new CountDownLatch(CLASSES.size());
+        // ----------------------------------------------------------------------------------------- start all processes
+        final var processes = applyCommandAndClasspath((cmd, cp) -> CLASSES.stream()
+                .map(c -> new String[]{cmd, "-cp", cp, c.getName()})
+                .map(__Utils::startProcess)
+                .peek(p -> {
+                    if (p == null) {
+                        latch.countDown();
+                    }
+                })
+                .filter(Objects::nonNull)
+                .peek(p -> {
+                    log.debug("process: {}", p.info());
+                    p.onExit().thenRun(() -> {
+                        latch.countDown();
+                        if (latch.getCount() == 0L) {
+                            System.exit(0);
+                        }
+                    });
+                })
+                .toList()
+        );
+        // ------------------------------------------------------------------- read 'quit', write 'quit' to each process
+        readQuitAndRun(false, () -> processes.forEach(__Utils::quitProcess));
+        // ----------------------------------------------------------------------------------- wait all processes exited
+        for (final var process : processes) {
+            waitForProcess(process);
+            assert !process.isAlive();
+        }
     }
 
     // -----------------------------------------------------------------------------------------------------------------

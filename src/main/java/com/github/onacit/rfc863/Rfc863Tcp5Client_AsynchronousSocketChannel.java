@@ -45,7 +45,7 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
                             final var src = ByteBuffer.allocate(1);
                             assert src.capacity() > 0;
                             client.write(
-                                    __Utils.randomize(src),     // <src>
+                                    __Utils.randomizeAvailableAndContent(src),     // <src>
                                     null,                       // <attachment>
                                     new CompletionHandler<>() { // <handler>
                                         @Override public void completed(final Integer result, final Object attachment) {
@@ -58,7 +58,7 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
                                                     return;
                                                 }
                                             }
-                                            client.write(__Utils.randomize(src), null, this);
+                                            client.write(__Utils.randomizeAvailableAndContent(src), null, this);
                                         }
                                         @Override public void failed(final Throwable exc, final Object attachment) {
                                             log.error("failed to write", exc);

@@ -13,7 +13,7 @@ class Rfc863Udp1Server_DatagramSocket extends Rfc863Udp$Server {
 
     public static void main(final String... args) throws Exception {
         try (var server = new DatagramSocket(null)) {
-            // reuse address/port --------------------------------------------------------------------------------------
+            // ------------------------------------------------------------------------------- try to reuse address/port
             try {
                 server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
             } catch (final UnsupportedOperationException uhe) {
@@ -25,24 +25,25 @@ class Rfc863Udp1Server_DatagramSocket extends Rfc863Udp$Server {
                 // empty
             }
             server.setReuseAddress(true); // SocketException
-            // bind ----------------------------------------------------------------------------------------------------
+            // ---------------------------------------------------------------------------------------------------- bind
             assert !server.isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // SocketException
             assert server.isBound();
             log.info("bound to {}", server.getLocalSocketAddress());
-            // read `quit`, and close the <server> ---------------------------------------------------------------------
+            // ------------------------------------------------------------------------- read `quit`, and close <server>
             __Utils.readQuitAndClose(true, server);
-            // prepare a package ---------------------------------------------------------------------------------------
+            // ---------------------------------------------------------------------------------------- prepare a packet
             final DatagramPacket packet;
             {
                 final var buf = new byte[__Constants.UDP_PAYLOAD_MAX];
                 packet = new DatagramPacket(buf, buf.length);
             }
-            // keep reading --------------------------------------------------------------------------------------------
+            // ---------------------------------------------------------------- keep receiving <packet> through <server>
             while (!server.isClosed()) {
                 server.receive(packet); // IOException
-                log.debug("discarding {} byte(s) received from {}", String.format("%1$5d", packet.getLength()),
-                          packet.getSocketAddress());
+                final var length = packet.getLength();
+                final var address = packet.getSocketAddress();
+                log.debug("discarding {} byte(s) received from {}", String.format("%5d", length), address);
             }
         }
     }

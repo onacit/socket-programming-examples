@@ -1,6 +1,5 @@
 package com.github.onacit.rfc863;
 
-import com.github.onacit.__Constants;
 import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -82,7 +81,7 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                     }
                     // ------------------------------------------------------------------------------------------- write
                     if (key.isWritable()) {
-                        __Utils.randomize(src);
+                        __Utils.randomizeAvailableAndContent(src);
                         final var w = client.write(src); // IOException
                         assert w > 0;
                         // --------------------------------------------------------------- if <THROTTLE>, unset OP_WRITE

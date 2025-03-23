@@ -1,11 +1,11 @@
 package com.github.onacit.rfc863;
 
 import com.github.onacit.__TestUtils;
+import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -20,24 +20,24 @@ abstract class Rfc863Tcp$Client__Test<T extends Rfc863Tcp$Client> {
         this.clientClass = Objects.requireNonNull(clientClass, "clientClass is null");
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
     @DisplayName("should destroy when server destroyed")
     @Test
-    void shouldDestroyWhenServerDestroyed() throws IOException, InterruptedException {
-        // -------------------------------------------------------------------------------------------------------------
+    void shouldDestroyWhenServerDestroyed() throws InterruptedException {
+        // -------------------------------------------------------------------- start a process of a random server class
         final var serverProcess = __TestUtils.startProcessAndWriteQuitIn(
                 __Rfc863Tcp_Server_TestUtils.randomServerClass(),
                 Duration.ofSeconds(4L)
         );
         log.debug("serverProcess: {}", serverProcess);
-        // -------------------------------------------------------------------------------------------------------------
-        final var clientProcess = __TestUtils.startProcess(
-                __Rfc863Tcp_Client_TestUtils.randomClientClass()
-        );
+        // ---------------------------------------------------------------------------- start a process of <clientClass>
+        final var clientProcess = __Utils.startProcess(clientClass);
         log.debug("clientProcess: {}", clientProcess);
         final var existed = clientProcess.waitFor(8L, TimeUnit.SECONDS);
         // -------------------------------------------------------------------------------------------------------------
         assertThat(existed).isTrue();
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
     final Class<T> clientClass;
 }

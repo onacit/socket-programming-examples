@@ -11,21 +11,21 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
-abstract class Rfc863Tcp$Server__Test<T extends Rfc863Tcp$Server> {
+abstract class Rfc863Udp$Client__Test<T extends Rfc863Udp$Client> {
 
-    Rfc863Tcp$Server__Test(final Class<T> serverClass) {
+    Rfc863Udp$Client__Test(final Class<T> clientClass) {
         super();
-        this.serverClass = Objects.requireNonNull(serverClass, "serverClass is null");
+        this.clientClass = Objects.requireNonNull(clientClass, "clientClass is null");
     }
 
     // -----------------------------------------------------------------------------------------------------------------
     @Test
     void _quit_quit() throws InterruptedException {
-        final var process = __TestUtils.startProcessAndWriteQuitIn(serverClass, Duration.ofSeconds(2L));
+        final var process = __TestUtils.startProcessAndWriteQuitIn(clientClass, Duration.ofSeconds(2L));
         final var exited = process.waitFor(4L, TimeUnit.SECONDS);
         assertThat(exited).isTrue();
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    final Class<T> serverClass;
+    final Class<T> clientClass;
 }

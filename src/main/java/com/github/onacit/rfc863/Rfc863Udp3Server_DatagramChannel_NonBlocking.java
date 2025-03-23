@@ -16,7 +16,7 @@ class Rfc863Udp3Server_DatagramChannel_NonBlocking extends Rfc863Udp$Server {
     public static void main(final String... args) throws Exception {
         try (var selector = Selector.open();
              var server = DatagramChannel.open()) {
-            // reuse address/port --------------------------------------------------------------------------------------
+            // ------------------------------------------------------------------------------- try to reuse address/port
             try {
                 server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
             } catch (final UnsupportedOperationException uhe) {
@@ -28,24 +28,28 @@ class Rfc863Udp3Server_DatagramChannel_NonBlocking extends Rfc863Udp$Server {
                 // empty
             }
             server.socket().setReuseAddress(true); // SocketException
-            // bind ----------------------------------------------------------------------------------------------------
+            // ---------------------------------------------------------------------------------------------------- bind
             assert !server.socket().isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             assert server.socket().isBound();
             log.info("bound to {}", server.getLocalAddress()); // IOException
-            // confiture non-blocking ----------------------------------------------------------------------------------
+            // ---------------------------------------------------------------------------------- configure non-blocking
             assert server.isBlocking();
             server.configureBlocking(false); // IOException
             assert !server.isBlocking();
-            // register the <server> to the <selector> -----------------------------------------------------------------
+            // ----------------------------------------------------------- register <server> to <selector> for <OP_READ>
             final var serverKey = server.register(selector, SelectionKey.OP_READ);
-            // read 'quit', cancel the <serverKey>, wakeup the <selector> ----------------------------------------------
+            // ---------------------------------------------- read 'quit', cancel the <serverKey>, wakeup the <selector>
             __Utils.readQuitAndRun(true, () -> {
                 serverKey.cancel();
                 assert !serverKey.isValid();
                 selector.wakeup();
             });
-            for (final var dst = ByteBuffer.allocate(__Constants.UDP_PAYLOAD_MAX); serverKey.isValid(); ) {
+            // ---------------------------------------------------------------- prepare a buffer for receiving datagrams
+            final var dst = ByteBuffer.allocate(__Constants.UDP_PAYLOAD_MAX);
+            // ------------------------------------------------------------------ keep selecting, handling selected keys
+            while (serverKey.isValid()) {
+                // ---------------------------------------------------------------------------------------------- select
                 final var count = selector.select(0); // IOException
                 assert count == 0 || count == 1;
                 for (final var i = selector.selectedKeys().iterator(); i.hasNext(); i.remove()) {
@@ -53,13 +57,14 @@ class Rfc863Udp3Server_DatagramChannel_NonBlocking extends Rfc863Udp$Server {
                     assert key == serverKey;
                     final var channel = key.channel();
                     assert channel == server;
-                    assert key.isReadable(); // !!!
-                    // read --------------------------------------------------------------------------------------------
+                    // -------------------------------------------------------------------------------------------- read
                     if (key.isReadable()) {
                         final var address = ((DatagramChannel) channel).receive(dst.clear()); // IOException
-                        log.debug("discarding {} byte(s) received from {}", String.format("%1$5d", dst.position()),
-                                  address);
+                        final var position = dst.position();
+                        log.debug("discarding {} byte(s) received from {}", String.format("%5d", position), address);
+                        continue;
                     }
+                    log.error("you're not supposed to see me!");
                 }
             }
         }

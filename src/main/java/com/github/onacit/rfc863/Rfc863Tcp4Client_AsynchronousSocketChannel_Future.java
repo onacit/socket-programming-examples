@@ -25,7 +25,7 @@ class Rfc863Tcp4Client_AsynchronousSocketChannel_Future extends Rfc863Tcp$Client
             final var src = ByteBuffer.allocate(1);
             assert src.capacity() > 0;
             while (client.isOpen()) {
-                __Utils.randomize(src);
+                __Utils.randomizeAvailableAndContent(src);
                 final var writing = client.write(src);
                 final var w = writing.get(); // InterruptedException, ExecutionException
                 assert w >= 0;
