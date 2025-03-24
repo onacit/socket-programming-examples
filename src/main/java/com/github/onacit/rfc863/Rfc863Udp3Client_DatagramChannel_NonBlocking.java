@@ -4,6 +4,7 @@ import com.github.onacit.__Constants;
 import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
@@ -17,11 +18,25 @@ class Rfc863Udp3Client_DatagramChannel_NonBlocking extends Rfc863Udp$Client {
     public static void main(final String... args) throws Exception {
         try (var selector = Selector.open();
              var client = DatagramChannel.open()) { // IOException
+            // ----------------------------------------------------------------------------------------- bind (optional)
+            if (ThreadLocalRandom.current().nextBoolean()) {
+                assert !client.socket().isBound();
+                client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0)); // IOException
+                assert client.socket().isBound();
+                log.debug("bound to {}", client.getLocalAddress()); // IOException
+            }
+            // -------------------------------------------------------------------------------------- connect (optional)
+            if (ThreadLocalRandom.current().nextBoolean()) {
+                assert !client.isConnected();
+                client.connect(_Constants.SERVER_ENDPOINT); // IOException
+                assert client.isConnected();
+                log.debug("connected to {}", client.getRemoteAddress()); // IOException
+            }
             // ---------------------------------------------------------------------------------- confiture non-blocking
             assert client.isBlocking(); // !!!
             client.configureBlocking(false);
             assert !client.isBlocking();
-            // --------------------------------------------------------------------- register <client> to the <selector>
+            // ------------------------------------------------------------------------- register <client> to <selector>
             final var clientKey = client.register(selector, 0); // ClosedChannelException
             // ------------------------------------------ start a new thread periodically sets <OP_WRITE> to <clientKey>
             Thread.ofPlatform().name("write-op-setter").daemon(true).start(() -> {
@@ -37,7 +52,7 @@ class Rfc863Udp3Client_DatagramChannel_NonBlocking extends Rfc863Udp$Client {
                     selector.wakeup();
                 }
             });
-            // ------------------------------------------ read 'quit', and cancel the <clientKey>, wakeup the <selector>
+            // -------------------------------------------------- read 'quit', and cancel <clientKey>, wakeup <selector>
             __Utils.readQuitAndRun(true, () -> {
                 clientKey.cancel();
                 selector.wakeup();

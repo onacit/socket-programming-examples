@@ -5,6 +5,7 @@ import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
@@ -15,16 +16,33 @@ class Rfc863Udp1Client_DatagramSocket extends Rfc863Udp$Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = new DatagramSocket(null)) { // -> close() -> IOException
-            // ---------------------------------------------------------------------------------------- bind, optionally
+            // ----------------------------------------------------------------------------------------- bind (optional)
             assert !client.isBound();
             if (ThreadLocalRandom.current().nextBoolean()) {
-                client.setReuseAddress(true); // SocketException
-                client.bind(new InetSocketAddress(__Constants.HOST, 0)); // SocketException
-                log.debug("bound to {}", client.getLocalSocketAddress());
+                client.setReuseAddress(true); // SocketException // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0)); // IOException
                 assert client.isBound();
+                log.debug("bound to {}", client.getLocalSocketAddress());
+            }
+            // -------------------------------------------------------------------------------------- connect (optional)
+            assert client.isConnected();
+            if (ThreadLocalRandom.current().nextBoolean()) {
+                client.connect(_Constants.SERVER_ENDPOINT); // SocketException
+                assert client.isConnected();
+                log.debug("connected to {}", client.getRemoteSocketAddress());
             }
             // ------------------------------------------------------------------------- read 'quit', and close <client>
-            __Utils.readQuitAndClose(true, client);
+            __Utils.readQuitAndCall(true, () -> {
+                if (client.isConnected()) {
+                    try {
+                        client.disconnect(); // UncheckedIOException
+                    } catch (final UncheckedIOException uioe) {
+                        log.error("failed to disconnect {}", client, uioe);
+                    }
+                }
+                client.close();
+                return null;
+            });
             // ---------------------------------------------------------------------------------------- prepare a packet
             final DatagramPacket packet;
             {
@@ -36,7 +54,7 @@ class Rfc863Udp1Client_DatagramSocket extends Rfc863Udp$Client {
             while (!client.isClosed()) {
                 final var data = packet.getData();
                 ThreadLocalRandom.current().nextBytes(data);
-                final var length = ThreadLocalRandom.current().nextInt(packet.getData().length + 1);
+                final var length = ThreadLocalRandom.current().nextInt(data.length + 1);
                 packet.setLength(length);
                 client.send(packet); // IOException
                 Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException

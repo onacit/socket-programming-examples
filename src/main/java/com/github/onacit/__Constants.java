@@ -9,22 +9,29 @@ import java.net.UnknownHostException;
 public final class __Constants {
 
     // -----------------------------------------------------------------------------------------------------------------
-    public static final InetAddress HOST;
+
+    /**
+     * The unspecified address
+     *
+     * @see <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/net/ipv6_guide/#special">Special IPv6
+     * Address Types</a>
+     */
+    public static final InetAddress ANY_LOCAL;
 
     static {
-        InetAddress host = null;
-        for (final var h : new String[]{"::", "0.0.0.0"}) {
+        InetAddress anyLocal = null;
+        for (final var host : new String[]{"::", "0.0.0.0"}) {
             try {
-                host = InetAddress.getByName(h);
+                anyLocal = InetAddress.getByName(host);
                 break;
             } catch (final UnknownHostException uhe) {
-                log.error("failed to get host address for '{}'", h, uhe);
+                log.error("failed to get anyLocal address for '{}'", host, uhe);
             }
         }
-        if (host == null) {
-            throw new RuntimeException("failed to get host address");
+        if (anyLocal == null) {
+            throw new RuntimeException("failed to get anyLocal address");
         }
-        HOST = host;
+        ANY_LOCAL = anyLocal;
     }
 
     // -----------------------------------------------------------------------------------------------------------------

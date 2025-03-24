@@ -15,7 +15,7 @@ final class _Constants {
     static final int PORT = __RFC863_Constants.PORT + 20000;
 
     // -----------------------------------------------------------------------------------------------------------------
-    static final SocketAddress SERVER_ENDPOINT_TO_BIND = new InetSocketAddress(__Constants.HOST, PORT);
+    static final SocketAddress SERVER_ENDPOINT_TO_BIND = new InetSocketAddress(__Constants.ANY_LOCAL, PORT);
 
     static final SocketAddress SERVER_ENDPOINT;
 

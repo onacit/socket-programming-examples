@@ -5,6 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+/**
+ * A class whose {@link Rfc863Tcp_AllClients#main(String...) main} method starts processes of all subclasses extend
+ * {@link Rfc863Tcp$Client}.
+ */
 @Slf4j
 class Rfc863Tcp_AllClients {
 
@@ -19,6 +23,13 @@ class Rfc863Tcp_AllClients {
             Rfc863Tcp5Client_AsynchronousSocketChannel.class
     );
 
+    // -----------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Starts all process of {@link #CLASSES}.
+     *
+     * @param args command line arguments
+     */
     public static void main(final String... args) {
         __Utils.startAll(CLASSES);
     }

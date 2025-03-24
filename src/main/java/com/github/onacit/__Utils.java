@@ -246,7 +246,7 @@ public final class __Utils {
         }
     }
 
-    public static <T> void startAll(final List<Class<? extends T>> CLASSES) {
+    public static void startAll(final List<? extends Class<?>> CLASSES) {
         final var latch = new CountDownLatch(CLASSES.size());
         // ----------------------------------------------------------------------------------------- start all processes
         final var processes = applyCommandAndClasspath((cmd, cp) -> CLASSES.stream()
