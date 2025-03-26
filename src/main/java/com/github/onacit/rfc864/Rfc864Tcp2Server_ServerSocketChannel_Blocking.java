@@ -15,38 +15,39 @@ class Rfc864Tcp2Server_ServerSocketChannel_Blocking {
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor();
              var server = ServerSocketChannel.open()) { // IOException
-            {
-                try {
-                    server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
-                } catch (final UnsupportedOperationException uhe) {
-                    // empty
-                }
-                try {
-                    server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
-                } catch (final UnsupportedOperationException uhe) {
-                    // empty
-                }
-                server.socket().setReuseAddress(true); // SocketException
+            // ------------------------------------------------------------------------------- try to reuse address/port
+            try {
+                server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
+            } catch (final UnsupportedOperationException uhe) {
+                // empty
             }
-            {
-                server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
-                log.info("bound to {}", server.getLocalAddress());
+            try {
+                server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
+            } catch (final UnsupportedOperationException uhe) {
+                // empty
             }
-            {
-                __Utils.readQuitAndClose(true, server);
-            }
-            {
-                assert server.isBlocking(); // !!!
-            }
+            server.socket().setReuseAddress(true); // SocketException
+            // ---------------------------------------------------------------------------------------------------- bind
+            assert !server.socket().isBound();
+            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
+            assert server.socket().isBound();
+            log.info("bound to {}", server.getLocalAddress());
+            // ------------------------------------------------------------------------- read 'quit', and close <server>
+            __Utils.readQuitAndClose(true, server);
+            // ---------------------------------------------------------------------------------------------------------
+            assert server.isBlocking(); // !!!
             while (server.isOpen()) {
                 final var client = server.accept(); // IOException
                 executor.submit(() -> {
                     try {
                         log.debug("accepted from {}", client.getRemoteAddress()); // IOException
+                        // ------------------------------------------------------------------- shutdown input (optional)
                         client.shutdownInput(); // IOException
+                        // -------------------------------------------------------------------------------- keep sending
                         for (final var generator = _Utils.newPatternGenerator(); server.isOpen(); ) {
-                            final var w = client.write(generator.buffer());
-                            // server doesn't need to sleep, at all
+                            final var w = client.write(generator.buffer()); // IOException
+                            assert w >= 0;
+                            // sleep, just for the sanity
                             Thread.sleep(ThreadLocalRandom.current().nextInt(128)); // InterruptedException
                         }
                     } finally {
