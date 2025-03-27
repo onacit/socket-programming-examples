@@ -28,7 +28,7 @@ class Rfc864Tcp2Client_SocketChannel_Blocking {
             assert connected;
             assert client.isConnected();
             log.debug("connected to {}", client.getRemoteAddress()); // IOException
-            // ------------------------------------------------------------------------- read `quit`, and close <client>
+            // --------------------------------------------------------------------- read `quit`, and close the <client>
             __Utils.readQuitAndClose(true, client);
             // ------------------------------------------------------------------------------------------ keep receiving
             assert client.isBlocking(); // !!!!

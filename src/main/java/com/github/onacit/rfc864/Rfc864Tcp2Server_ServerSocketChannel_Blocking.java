@@ -32,7 +32,7 @@ class Rfc864Tcp2Server_ServerSocketChannel_Blocking {
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             assert server.socket().isBound();
             log.info("bound to {}", server.getLocalAddress());
-            // ------------------------------------------------------------------------- read 'quit', and close <server>
+            // --------------------------------------------------------------------- read 'quit', and close the <server>
             __Utils.readQuitAndClose(true, server);
             // ---------------------------------------------------------------------------------------------------------
             assert server.isBlocking(); // !!!

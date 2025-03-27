@@ -9,6 +9,9 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
+/**
+ *
+ */
 @Slf4j
 class Rfc864Tcp4Client_SocketChannel_NonBlocking {
 
@@ -24,11 +27,11 @@ class Rfc864Tcp4Client_SocketChannel_NonBlocking {
             assert !client.isRegistered();
             final SelectionKey clientKey;
             if (client.connect(_Constants.SERVER_ENDPOINT)) { // IOException
-                // ----------------------------- (immediately) connected, register <client> to <selector> for <OP_WRITE>
+                // -------------------------------- (immediately) connected, register <client> to <selector> for writing
                 log.debug("connected to {}", client.getRemoteAddress()); // IOException
                 clientKey = client.register(selector, SelectionKey.OP_WRITE); // ClosedChannelException
             } else {
-                // ----------------------- not (immediately) connected, register <client> to <selector> for <OP_CONNECT>
+                // ------------------------- not (immediately) connected, register <client> to <selector> for connecting
                 clientKey = client.register(selector, SelectionKey.OP_CONNECT); // ClosedChannelException
             }
             assert client.isRegistered();
@@ -38,7 +41,7 @@ class Rfc864Tcp4Client_SocketChannel_NonBlocking {
                 assert !clientKey.isValid();
                 selector.wakeup();
             });
-            // ----------------------------------------------------------- keep selecting keys, and handle selected keys
+            // --------------------------------------------------------------------------- keep selecting, handling keys
             for (final var dst = ByteBuffer.allocate(1); clientKey.isValid(); ) {
                 // ---------------------------------------------------------------------------------------------- select
                 final var count = selector.select(0L); // IOException
@@ -49,12 +52,12 @@ class Rfc864Tcp4Client_SocketChannel_NonBlocking {
                     assert key == clientKey;
                     final var channel = key.channel();
                     assert channel == client;
-                    // ----------------------------------------------------------------------------------------- connect
+                    // ------------------------------------------------------------------------------- finish connecting
                     if (key.isConnectable()) {
                         final var connected = client.finishConnect(); // IOException
-                        assert connected;
+                        assert connected; // why?
                         log.debug("connected to {}", client.getRemoteAddress()); //  IOException
-                        key.interestOpsAnd(~SelectionKey.OP_CONNECT); // not interested in connecting
+                        key.interestOpsAnd(~SelectionKey.OP_CONNECT); // not interested in connecting anymore
                         assert key.isConnectable(); // still
                         key.interestOpsOr(SelectionKey.OP_READ); // now interested in reading
                         assert !key.isReadable(); // still
