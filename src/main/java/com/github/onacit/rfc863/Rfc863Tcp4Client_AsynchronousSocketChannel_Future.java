@@ -6,10 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -28,6 +26,17 @@ class Rfc863Tcp4Client_AsynchronousSocketChannel_Future extends Rfc863Tcp$Client
                       client.getRemoteAddress(), // IOException
                       client.getLocalAddress() // IOException
             );
+            // ------------------------------------------------------------------------------- shutdown input (optional)
+            if (ThreadLocalRandom.current().nextBoolean()) {
+                client.shutdownInput(); // IOException
+                try { // TODO: remove
+                    final var r = client.read(ByteBuffer.allocate(1)).get();
+                    log.debug("r: {}; expected as the input has been shut down", r);
+                    assert r == -1;
+                } catch (final ExecutionException ie) {
+                    // expected
+                }
+            }
             // --------------------------------------------------------------------- read 'quit', and close the <client>
             __Utils.readQuitAndClose(true, client);
             // ------------------------------------------------------------------------------- keep sending random bytes

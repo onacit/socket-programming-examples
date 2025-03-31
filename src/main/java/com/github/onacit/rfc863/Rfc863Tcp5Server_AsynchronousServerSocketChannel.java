@@ -10,6 +10,7 @@ import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 
 /**
  * .
@@ -43,9 +44,9 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
             // -------------------------------------------------------------------------- read 'quit', break the <latch>
             __Utils.readQuitAndCountDown(true, latch);
             // -------------------------------------------------------------------------------------------------- accept
-            server.accept(
+            server.accept( // @formatter:off
                     null,                       // <attachment>
-                    new CompletionHandler<>() { // <handler> // @formatter:off
+                    new CompletionHandler<>() { // <handler>
                         @Override
                         public void completed(final AsynchronousSocketChannel client, final Object attachment) {
                             try {
@@ -56,6 +57,14 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                             // ------------------------------------------------------------------ try to shutdown output
                             try {
                                 client.shutdownOutput(); // IOException
+                                try { // TODO: remove
+                                    client.write(ByteBuffer.allocate(1)).get();
+                                    throw new RuntimeException("shouldn't be here!");
+                                } catch (final InterruptedException ie) {
+                                    // don't care
+                                } catch (final ExecutionException ee) {
+                                    // expected
+                                }
                             } catch (final IOException ioe) {
                                 log.error("failed to shutdown output of {}", client, ioe);
                             }
@@ -85,10 +94,14 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                                                     log.error("failed to get remote address of {}", client, ioe);
                                                 }
                                             }
-                                            client.read(dst.clear(), attachment, this);
+                                            client.read(
+                                                    dst.clear(), // <dst>
+                                                    attachment,  // <attachment>
+                                                    this         // <handler>
+                                            );
                                         }
                                         @Override public void failed(final Throwable exc, final Object attachment) {
-                                            log.error("failed to read", exc);
+                                            log.error("failed to read; attachment: {}", attachment, exc);
                                             try {
                                                 client.close();
                                             } catch (final IOException ioe) {
@@ -100,10 +113,10 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                             server.accept(null, this);
                         }
                         @Override public void failed(final Throwable exc, final Object attachment) {
-                            log.error("failed to accept", exc);
+                            log.error("failed to accept; attachment: {}", attachment, exc);
                             latch.countDown();
-                        } // @formatter:on
-                    }
+                        }
+                    } // @formatter:on
             );
             // ------------------------------------------------------------------------------ await <latch> to be broken
             latch.await(); // InterruptedException

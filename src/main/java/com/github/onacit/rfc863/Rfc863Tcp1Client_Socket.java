@@ -1,10 +1,10 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Constants;
 import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.ThreadLocalRandom;
@@ -20,10 +20,11 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = new Socket()) { // -> close() -> IOException
             // ----------------------------------------------------------------------------------------- bind (optional)
-            assert !client.isBound();
-            if (ThreadLocalRandom.current().nextBoolean()) {
-                client.bind(new InetSocketAddress(InetAddress.getLocalHost(), 0));
+            if (_Constants.BIND_CLIENT_EXPLICITLY) {
+                assert !client.isBound();
+                client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0));
                 assert client.isBound();
+                log.debug("bound to {}", client.getLocalSocketAddress());
             }
             // ------------------------------------------------------------------------------------------------- connect
             assert !client.isConnected();
@@ -32,13 +33,14 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
             assert client.isBound(); // !!!
             log.debug("connected to {}, through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
             // ------------------------------------------------------------------------------- shutdown input (optional)
-            if (ThreadLocalRandom.current().nextBoolean()) {
+            if (_Constants.SHUTDOWN_INPUT_IN_CLIENT_SIDE) {
+                log.debug("shutting down the input...");
                 client.shutdownInput(); // IOException
-                try { // TODO: remove
+                try {
                     client.getInputStream().read(); // IOException
-                    throw new AssertionError("shouldn't be here");
+                    assert false;
                 } catch (final IOException ioe) {
-                    // expected
+                    log.info("expected; as the input has been shut down", ioe);
                 }
             }
             // ------------------------------------------------------------------------- read `quit`, and close <client>

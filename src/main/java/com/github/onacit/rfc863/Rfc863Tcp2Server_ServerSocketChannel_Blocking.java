@@ -26,7 +26,8 @@ class Rfc863Tcp2Server_ServerSocketChannel_Blocking extends Rfc863Tcp$Server {
             } catch (final UnsupportedOperationException uoe) {
                 // empty
             }
-            server.socket().setReuseAddress(true); // SocketException
+            server.socket().setReuseAddress(
+                    true); // SocketException // -> setOption(SO_REUSEADDR, TRUE) // TODO: remove
             // ---------------------------------------------------------------------------------------------------- bind
             assert !server.socket().isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
@@ -42,8 +43,21 @@ class Rfc863Tcp2Server_ServerSocketChannel_Blocking extends Rfc863Tcp$Server {
                     try {
                         final var remoteAddress = client.getRemoteAddress(); // IOException
                         log.debug("accepted from {}", remoteAddress);
-                        for (final var dst = ByteBuffer.allocate(1); server.isOpen(); dst.clear()) {
-                            final var r = client.read(dst); // IOException
+                        // ------------------------------------------------------------------ shutdown output (optional)
+                        if (_Constants.SHUTDOWN_OUTPUT_IN_SERVER_SIDE) {
+                            client.shutdownOutput(); // IOException
+                            try {
+                                client.write(ByteBuffer.allocate(1)); // IOException
+                                assert false : "shouldn't be here";
+                            } catch (final IOException ioe) {
+                                log.debug("expected; as the output has been shut down", ioe);
+                            }
+                        }
+                        // ------------------------------------------------------------------------------ keep receiving
+                        final var dst = ByteBuffer.allocate(1);
+                        assert dst.capacity() > 0;
+                        while (server.isOpen()) {
+                            final var r = client.read(dst.clear()); // IOException
                             if (r == -1) {
                                 break;
                             }

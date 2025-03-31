@@ -32,6 +32,13 @@ final class _Constants {
     static final boolean THROTTLE = true;
 
     // -----------------------------------------------------------------------------------------------------------------
+    static final boolean BIND_CLIENT_EXPLICITLY = true;
+
+    static final boolean SHUTDOWN_INPUT_IN_CLIENT_SIDE = true;
+
+    static final boolean SHUTDOWN_OUTPUT_IN_SERVER_SIDE = true;
+
+    // -----------------------------------------------------------------------------------------------------------------
     private _Constants() {
         throw new AssertionError("instantiation is not allowed");
     }

@@ -8,7 +8,6 @@ import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc863Tcp$Server {
@@ -27,7 +26,8 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc863Tcp$Server 
             } catch (final UnsupportedOperationException uoe) {
                 // empty
             }
-            server.socket().setReuseAddress(true); // SocketException
+            server.socket().setReuseAddress(
+                    true); // SocketException // -> setOption(SO_REUSEADDR, TRUE) // TODO: remove
             // ---------------------------------------------------------------------------------------------------- bind
             assert !server.socket().isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
@@ -68,25 +68,27 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc863Tcp$Server 
                     if (key.isAcceptable()) {
                         assert channel == server;
                         final var client = ((ServerSocketChannel) channel).accept(); // IOException
-                        final var remoteAddress = client.getRemoteAddress();
+                        final var remoteAddress = client.getRemoteAddress(); // IOException
                         log.debug("accepted from {}, through {}",
                                   remoteAddress,
                                   client.getLocalAddress() // IOException
                         );
-                        // ----------------------------------------------------------------- shutdown output, optionally
-                        // TODO: remove!
-                        if (ThreadLocalRandom.current().nextBoolean()) {
+                        // ---------------------------------------------------------------- shutdown output (optionally)
+                        if (_Constants.SHUTDOWN_OUTPUT_IN_SERVER_SIDE) {
+                            log.debug("shutting down the output...");
                             client.shutdownOutput(); // IOException
                             try {
-                                client.write(ByteBuffer.allocate(0));
+                                client.write(ByteBuffer.allocate(1));
+                                assert false;
                             } catch (final IOException ioe) {
-                                // expected
+                                log.debug("expected; as the output has been shut down", ioe);
                             }
                         }
                         // ---------------------------------------------------------------------- configure non-blocking
                         assert client.isBlocking();
                         client.configureBlocking(false); // IOException
-                        // ----------------------------------------------------- register the <client> to the <selector>
+                        assert !client.isBlocking();
+                        // ----------------------------------- register the <client> to the <selector> for the <OP_READ>
                         final var clientKey = client.register(selector, SelectionKey.OP_READ); // ClosedChannelException
                         // ------------------------------------------------------------------ attach the <remoteAddress>
                         clientKey.attach(remoteAddress);
@@ -98,9 +100,7 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc863Tcp$Server 
                         assert attachment instanceof SocketAddress;
                         final var r = ((ReadableByteChannel) channel).read(dst.clear()); // IOException
                         if (r == -1) {
-                            assert !channel.isOpen();
-                            assert key.isValid(); // still
-                            key.cancel();
+                            channel.close();
                             assert !key.isValid();
                             continue;
                         }

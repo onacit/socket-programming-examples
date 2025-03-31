@@ -27,6 +27,7 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
             final var latch = new CountDownLatch(1);
             // -------------------------------------------------------------------------- read 'quit', break the <latch>
             __Utils.readQuitAndCountDown(true, latch);
+            // ----------------------------------------------------------------------------------- try to shutdown input
             // --------------------------------------------------------------------------------- connect, asynchronously
             client.connect(
                     _Constants.SERVER_ENDPOINT, // <remote>
@@ -41,6 +42,20 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
                             } catch (final IOException ioe) {
                                 log.error("failed to get address from {}", client, ioe);
                             }
+                            // --------------------------------------------------------------- shutdown input (optional)
+                            try {
+                                client.shutdownInput();
+                                client.read(ByteBuffer.allocate(1), null, new CompletionHandler<>() { // TODO: remove
+                                    @Override public void completed(final Integer result, Object attachment) {
+                                        assert result == -1;
+                                    }
+                                    @Override public void failed(final Throwable exc, Object attachment) {
+                                        assert false;
+                                    }});
+                            } catch (final IOException ioe) {
+                                log.error("failed to shutdown input of {}", client, ioe);
+                            }
+                            // --------------------------------------------------------------- keep sending random bytes
                             final var src = ByteBuffer.allocate(1);
                             assert src.capacity() > 0;
                             client.write(
@@ -52,13 +67,18 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
                                                 try {
                                                     Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
                                                 } catch (final InterruptedException ie) {
+                                                    Thread.currentThread().interrupt();
                                                     throw new RuntimeException("interrupted while sleeping", ie);
                                                 }
                                             }
-                                            client.write(__Utils.randomizeAvailableAndContent(src), null, this);
+                                            client.write(
+                                                    __Utils.randomizeAvailableAndContent(src), // <src>
+                                                    attachment,                                // <attachment>
+                                                    this                                       // <handler>
+                                            );
                                         }
                                         @Override public void failed(final Throwable exc, final Object attachment) {
-                                            log.error("failed to write", exc);
+                                            log.error("failed to write; attachment: {}", attachment, exc);
                                             latch.countDown();
                                         }
                                     }

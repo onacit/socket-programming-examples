@@ -30,7 +30,7 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
             } catch (final UnsupportedOperationException uoe) {
                 // empty
             }
-            server.setReuseAddress(true); // -> setOption(SO_REUSEADDR, TRUE) // SocketException
+            server.setReuseAddress(true); // SocketException // -> setOption(SO_REUSEADDR, TRUE) // TODO: remove!
             // ---------------------------------------------------------------------------------------------------- bind
             assert !server.isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException
@@ -45,8 +45,18 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
                     try {
                         final var remoteAddress = client.getRemoteSocketAddress();
                         log.debug("accepted from {}", remoteAddress);
+                        // ------------------------------------------------------------------ shutdown output (optional)
+                        if (_Constants.SHUTDOWN_OUTPUT_IN_SERVER_SIDE) {
+                            client.shutdownOutput(); // IOException
+                            try {
+                                client.getOutputStream().write(0);
+                            } catch (final IOException ioe) {
+                                log.info("expected; as the output has been shut down", ioe);
+                            }
+                        }
+                        // ------------------------------------------------------------------------------ keep receiving
                         for (int b; (b = client.getInputStream().read()) != -1 && !server.isClosed(); ) { // IOException
-                            log.debug("discarding {} received from {}", String.format("0x%1$02X", b), remoteAddress);
+                            log.debug("discarding {} received from {}", String.format("0x%02X", b), remoteAddress);
                         }
                     } finally {
                         client.close(); // IOException

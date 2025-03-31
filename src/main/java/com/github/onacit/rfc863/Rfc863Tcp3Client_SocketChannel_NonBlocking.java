@@ -1,9 +1,12 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Constants;
 import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -16,19 +19,34 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
     public static void main(final String... args) throws IOException {
         try (var selector = Selector.open(); // IOException
              var client = SocketChannel.open()) { // IOException
+            // ----------------------------------------------------------------------------------------- bind (optional)
+            if (_Constants.BIND_CLIENT_EXPLICITLY) {
+                assert !client.socket().isBound();
+                client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0));
+                assert client.socket().isBound();
+                log.debug("bound to {}", client.getLocalAddress());
+            }
             // ---------------------------------------------------------------------------------- configure non-blocking
             assert client.isBlocking();
             client.configureBlocking(false);
             assert !client.isBlocking();
             // --------------------------------------------- try to connect, and register the <client> to the <selector>
             final SelectionKey clientKey;
-            if (client.connect(_Constants.SERVER_ENDPOINT)) { // connected, immediately
-                log.debug("connected to {}, through {}",
+            if (client.connect(_Constants.SERVER_ENDPOINT)) { // IOException
+                log.debug("connected, immediately, to {}, through {}",
                           client.getRemoteAddress(), // IOException
                           client.getLocalAddress() // IOException
                 );
                 clientKey = client.register(selector, SelectionKey.OP_WRITE); // ClosedChannelException
-            } else { // not, immediately, connected
+                // --------------------------------------------------------------------------- shutdown input (optional)
+                if (_Constants.SHUTDOWN_INPUT_IN_CLIENT_SIDE) {
+                    log.debug("shutting down the input...");
+                    client.shutdownInput();
+                    final var r = client.read(ByteBuffer.allocate(1));
+                    assert r == -1 : "expected as the input has been shut down";
+                }
+            } else {
+                log.debug("not, immediately, connected");
                 clientKey = client.register(selector, SelectionKey.OP_CONNECT); // ClosedChannelException
             }
             // ------------------------------------------ read 'quit', cancel the <clientKey>, and wakeup the <selector>
@@ -51,17 +69,24 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                     assert channel == client;
                     // ---------------------------------------------------------------------------------- finish connect
                     if (key.isConnectable()) {
-                        final var finished = client.finishConnect();
-                        assert finished;
+                        final var finished = client.finishConnect(); // IOException
+                        assert finished; // why?
                         log.debug("connected to {}, through {}",
                                   client.getRemoteAddress(), // IOException
                                   client.getLocalAddress() // IOException
                         );
-                        // ---------------------------------------------------------------------------- unset OP_CONNECT
+                        // ------------------------------------------------------------------- shutdown input (optional)
+                        if (_Constants.SHUTDOWN_INPUT_IN_CLIENT_SIDE) {
+                            log.debug("shutting down the input...");
+                            client.shutdownInput();
+                            final var r = client.read(ByteBuffer.allocate(1));
+                            assert r == -1 : "expected; as the input has been shut down";
+                        }
+                        // -------------------------------------------------------------------------- unset <OP_CONNECT>
                         key.interestOpsAnd(~SelectionKey.OP_CONNECT);
-                        // -------------------------------------------------------------------------------- set OP_WRITE
+                        // ------------------------------------------------------------------------------ set <OP_WRITE>
                         key.interestOpsOr(SelectionKey.OP_WRITE);
-                        // ----------------------- if <THROTTLE>, periodically set OP_WRITE, and wake up the< selector>
+                        // ---------------------- if <THROTTLE>, periodically set <OP_WRITE>, and wake up the< selector>
                         if (_Constants.THROTTLE) {
                             Thread.ofVirtual().start(() -> {
                                 assert Thread.currentThread().isDaemon();
