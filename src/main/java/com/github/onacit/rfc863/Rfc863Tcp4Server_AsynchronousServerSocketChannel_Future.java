@@ -39,16 +39,16 @@ class Rfc863Tcp4Server_AsynchronousServerSocketChannel_Future extends Rfc863Tcp$
                     executor.submit(() -> {
                         try {
                             final var remoteAddress = client.getRemoteAddress(); // IOException
-                            log.debug("accepted from {}, through {}", remoteAddress,
+                            log.debug("accepted from {}, through {}",
+                                      remoteAddress,
                                       client.getLocalAddress() // IOException
                             );
-                            final var dst = ByteBuffer.allocate(1);
+                            final var dst = ByteBuffer.allocate(1); // increase the capacity, if you want to.
                             assert dst.capacity() > 0;
                             while (server.isOpen()) {
                                 final var reading = client.read(dst.clear());
                                 final var r = reading.get(); // ExecutionException, InterruptedException
                                 if (r == -1) {
-                                    assert !client.isOpen();
                                     break;
                                 }
                                 assert r > 0;

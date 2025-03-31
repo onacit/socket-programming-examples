@@ -30,7 +30,7 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
             } catch (final UnsupportedOperationException uoe) {
                 // empty
             }
-            server.setReuseAddress(true); // SocketException
+            server.setReuseAddress(true); // -> setOption(SO_REUSEADDR, TRUE) // SocketException
             // ---------------------------------------------------------------------------------------------------- bind
             assert !server.isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException

@@ -43,7 +43,7 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
             }
             // ------------------------------------------------------------------------- read `quit`, and close <client>
             __Utils.readQuitAndClose(true, client);
-            // -------------------------------------------------------------------------------------- write random bytes
+            // ------------------------------------------------------------------------------- keep sending random bytes
             while (!client.isClosed()) {
                 client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // IOException
                 if (_Constants.THROTTLE) {

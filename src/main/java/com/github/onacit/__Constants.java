@@ -25,13 +25,14 @@ public final class __Constants {
                 anyLocal = InetAddress.getByName(host);
                 break;
             } catch (final UnknownHostException uhe) {
-                log.error("failed to get anyLocal address for '{}'", host, uhe);
+                log.error("failed to get any local address for '{}'", host, uhe);
             }
         }
         if (anyLocal == null) {
-            throw new RuntimeException("failed to get anyLocal address");
+            throw new RuntimeException("failed to get any local address");
         }
         ANY_LOCAL = anyLocal;
+        log.debug("any local: {}", ANY_LOCAL);
     }
 
     // -----------------------------------------------------------------------------------------------------------------

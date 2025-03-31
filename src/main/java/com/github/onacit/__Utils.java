@@ -115,6 +115,14 @@ public final class __Utils {
         );
     }
 
+    public static void readQuitAndCountDown(final boolean daemon, final CountDownLatch latch) {
+        Objects.requireNonNull(latch, "latch is null");
+        readQuitAndRun(
+                daemon,
+                latch::countDown
+        );
+    }
+
     // -----------------------------------------------------------------------------------------------------------------
     // https://stackoverflow.com/a/54790608/330457
     public static <R> R applyCommandAndClasspath(

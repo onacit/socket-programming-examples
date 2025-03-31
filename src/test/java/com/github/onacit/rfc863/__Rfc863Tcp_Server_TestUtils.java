@@ -8,9 +8,9 @@ import java.util.concurrent.ThreadLocalRandom;
 final class __Rfc863Tcp_Server_TestUtils {
 
     static Class<? extends Rfc863Tcp$Server> randomServerClass() {
-        assert !__Rfc863Tcp_Server_TestConstants.SERVER_CLASSES.isEmpty();
-        return __Rfc863Tcp_Server_TestConstants.SERVER_CLASSES.get(
-                ThreadLocalRandom.current().nextInt(__Rfc863Tcp_Server_TestConstants.SERVER_CLASSES.size())
+        assert !Rfc863Tcp_AllServers.CLASSES.isEmpty();
+        return Rfc863Tcp_AllServers.CLASSES.get(
+                ThreadLocalRandom.current().nextInt(Rfc863Tcp_AllServers.CLASSES.size())
         );
     }
 

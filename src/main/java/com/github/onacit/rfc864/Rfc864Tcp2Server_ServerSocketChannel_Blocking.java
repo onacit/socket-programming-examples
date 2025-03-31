@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
-class Rfc864Tcp2Server_ServerSocketChannel_Blocking {
+class Rfc864Tcp2Server_ServerSocketChannel_Blocking extends Rfc864Tcp$Server {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor();

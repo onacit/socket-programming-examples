@@ -1,5 +1,7 @@
 package com.github.onacit.z_calculator;
 
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -11,6 +13,7 @@ import static com.github.onacit.z_calculator._Test_Utils.randomFloat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
+@Slf4j
 class _FloatTest {
 
     private static Stream<Float> zeroFloats_() {
@@ -55,6 +58,7 @@ class _FloatTest {
         assertThat(r).isZero();
     }
 
+    @Disabled("may be zero")
     @DisplayName("non-zero / non-zero != zero")
     @Test
     void _NaN_nonZeroDivideByNonZero() {
@@ -65,7 +69,8 @@ class _FloatTest {
         assumeThat(b).isNotZero();
         // -------------------------------------------------------------------------------------------------------- when
         float r = a / b;
+        log.debug("a: {}, b: {}, r: {}", a, b, r);
         // -------------------------------------------------------------------------------------------------------- then
-        assertThat(r).isNotZero();
+//        assertThat(r).isNotZero(); // may be
     }
 }

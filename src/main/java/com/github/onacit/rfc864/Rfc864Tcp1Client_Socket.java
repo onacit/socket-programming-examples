@@ -22,7 +22,7 @@ class Rfc864Tcp1Client_Socket extends Rfc864Tcp$Client {
             }
             // ------------------------------------------------------------------------------------------------- connect
             client.connect(_Constants.SERVER_ENDPOINT); // IOException
-            log.debug("connected to {} through {}", client.getRemoteSocketAddress(),
+            log.debug("connected to {}, through {}", client.getRemoteSocketAddress(),
                       client.getLocalSocketAddress());
             // ------------------------------------------------------------------------------ shutdown output (optional)
             client.shutdownOutput(); // IOException

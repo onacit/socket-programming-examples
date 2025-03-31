@@ -25,8 +25,8 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
         try (var client = AsynchronousSocketChannel.open()) { // IOException
             // ----------------------------------------------------------------------------------------- prepare a latch
             final var latch = new CountDownLatch(1);
-            // ------------------------------------------------------------------------------ read 'quit', break <latch>
-            __Utils.readQuitAndRun(true, latch::countDown);
+            // -------------------------------------------------------------------------- read 'quit', break the <latch>
+            __Utils.readQuitAndCountDown(true, latch);
             // --------------------------------------------------------------------------------- connect, asynchronously
             client.connect(
                     _Constants.SERVER_ENDPOINT, // <remote>
@@ -39,23 +39,20 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
                                           client.getLocalAddress() // IOException
                                 );
                             } catch (final IOException ioe) {
-                                failed(ioe, attachment);
-                                return;
+                                log.error("failed to get address from {}", client, ioe);
                             }
                             final var src = ByteBuffer.allocate(1);
                             assert src.capacity() > 0;
                             client.write(
-                                    __Utils.randomizeAvailableAndContent(src),     // <src>
-                                    null,                       // <attachment>
-                                    new CompletionHandler<>() { // <handler>
+                                    __Utils.randomizeAvailableAndContent(src), // <src>
+                                    null,                                      // <attachment>
+                                    new CompletionHandler<>() {                // <handler>
                                         @Override public void completed(final Integer result, final Object attachment) {
                                             if (_Constants.THROTTLE) {
                                                 try {
                                                     Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
                                                 } catch (final InterruptedException ie) {
-                                                    Thread.currentThread().interrupt();
-                                                    failed(ie, attachment);
-                                                    return;
+                                                    throw new RuntimeException("interrupted while sleeping", ie);
                                                 }
                                             }
                                             client.write(__Utils.randomizeAvailableAndContent(src), null, this);
@@ -73,7 +70,7 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
                         } // @formatter:on
                     }
             );
-            // ------------------------------------------------------------------------------------------- await <latch>
+            // --------------------------------------------------------------------------------------- await the <latch>
             latch.await();
         }
     }

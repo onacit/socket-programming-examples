@@ -2,6 +2,7 @@ package com.github.onacit.rfc863;
 
 import com.github.onacit.__TestUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -19,10 +20,13 @@ abstract class Rfc863Tcp$Server__Test<T extends Rfc863Tcp$Server> {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
+    @DisplayName("start -> write 'quit' -> exited: true")
     @Test
-    void _quit_quit() throws InterruptedException {
+    void _exited_startAndWriteQuit() throws InterruptedException {
+        // -------------------------------------------------------------------------------------------------- given/when
         final var process = __TestUtils.startProcessAndWriteQuitIn(serverClass, Duration.ofSeconds(2L));
         final var exited = process.waitFor(4L, TimeUnit.SECONDS);
+        // -------------------------------------------------------------------------------------------------------- then
         assertThat(exited).isTrue();
     }
 

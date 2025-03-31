@@ -20,9 +20,11 @@ abstract class Rfc863Udp$Server__Test<T extends Rfc863Udp$Server> {
 
     // -----------------------------------------------------------------------------------------------------------------
     @Test
-    void _quit_quit() throws InterruptedException {
+    void _exited_startAndWriteQuit() throws InterruptedException {
+        // ------------------------------------------------------------------------------------------------ given / when
         final var process = __TestUtils.startProcessAndWriteQuitIn(serverClass, Duration.ofSeconds(2L));
         final var exited = process.waitFor(4L, TimeUnit.SECONDS);
+        // -------------------------------------------------------------------------------------------------------- then
         assertThat(exited).isTrue();
     }
 

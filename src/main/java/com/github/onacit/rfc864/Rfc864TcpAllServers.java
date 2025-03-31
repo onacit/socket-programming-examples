@@ -10,6 +10,11 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 class Rfc864TcpAllServers {
 
+    static final List<Class<? extends Rfc864Tcp$Server>> classes = List.of(
+            Rfc864Tcp1Server_ServerSocket.class,
+            Rfc864Tcp2Server_ServerSocketChannel_Blocking.class
+    );
+
     public static void main(final String... args) {
         final var classes = List.of(
                 Rfc864Tcp1Server_ServerSocket.class,
