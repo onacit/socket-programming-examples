@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 final class _Constants {
@@ -34,14 +35,14 @@ final class _Constants {
     // -----------------------------------------------------------------------------------------------------------------
     static final boolean TCP_CLIENT_BIND = true;
 
-    static final boolean TCP_CLIENT_SHUTDOWN_INPUT = true;
+    static final boolean TCP_CLIENT_SHUTDOWN_INPUT = ThreadLocalRandom.current().nextBoolean();
 
-    static final boolean TCP_SERVER_SHUTDOWN_OUTPUT = true;
+    static final boolean TCP_SERVER_SHUTDOWN_OUTPUT = ThreadLocalRandom.current().nextBoolean();
 
     // -----------------------------------------------------------------------------------------------------------------
-    static final boolean UDP_CLIENT_BIND = true;
+    static final boolean UDP_CLIENT_BIND = ThreadLocalRandom.current().nextBoolean();
 
-    static final boolean UDP_CLIENT_CONNECT = true;
+    static final boolean UDP_CLIENT_CONNECT = ThreadLocalRandom.current().nextBoolean();
 
     // -----------------------------------------------------------------------------------------------------------------
     private _Constants() {

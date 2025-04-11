@@ -8,6 +8,7 @@ import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 class Rfc863Tcp2Server_ServerSocketChannel_Blocking extends Rfc863Tcp$Server {
@@ -46,8 +47,9 @@ class Rfc863Tcp2Server_ServerSocketChannel_Blocking extends Rfc863Tcp$Server {
                         // ------------------------------------------------------------------ shutdown output (optional)
                         if (_Constants.TCP_SERVER_SHUTDOWN_OUTPUT) {
                             client.shutdownOutput(); // IOException
+                            final var src = ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(2)); // IOException
                             try {
-                                client.write(ByteBuffer.allocate(1)); // IOException
+                                client.write(src); // IOException
                                 assert false : "shouldn't be here";
                             } catch (final IOException ioe) {
                                 log.debug("expected; as the output has been shut down", ioe);

@@ -49,7 +49,8 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
                         if (_Constants.TCP_SERVER_SHUTDOWN_OUTPUT) {
                             client.shutdownOutput(); // IOException
                             try {
-                                client.getOutputStream().write(0);
+                                client.getOutputStream().write(0); // IOException
+                                assert false : "shouldn't be here";
                             } catch (final IOException ioe) {
                                 log.info("expected; as the output has been shut down", ioe);
                             }
