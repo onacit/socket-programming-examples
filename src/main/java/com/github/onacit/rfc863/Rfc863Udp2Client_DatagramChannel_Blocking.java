@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.PortUnreachableException;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.concurrent.ThreadLocalRandom;
@@ -49,8 +50,12 @@ class Rfc863Udp2Client_DatagramChannel_Blocking extends Rfc863Udp$Client {
             // --------------------------------------------------------------------- keep sending <src> through <client>
             while (client.isOpen()) {
                 __Utils.randomizeAvailableAndContent(src);
-                final var w = client.send(src, _Constants.SERVER_ENDPOINT); // IOException
-                assert w >= 0;
+                try {
+                    final var w = client.send(src, _Constants.SERVER_ENDPOINT); // IOException
+                    assert w >= 0;
+                } catch (final PortUnreachableException pue) {
+                    log.error("failed to send", pue);
+                }
                 // just for the sanity
                 Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
             }

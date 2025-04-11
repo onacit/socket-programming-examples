@@ -9,6 +9,7 @@ import java.io.UncheckedIOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
+import java.net.PortUnreachableException;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
@@ -58,7 +59,11 @@ class Rfc863Udp1Client_DatagramSocket extends Rfc863Udp$Client {
                 ThreadLocalRandom.current().nextBytes(data);
                 final var length = ThreadLocalRandom.current().nextInt(data.length + 1);
                 packet.setLength(length);
-                client.send(packet); // IOException
+                try {
+                    client.send(packet); // IOException
+                } catch (final PortUnreachableException pue) {
+                    log.error("failed to send", pue);
+                }
                 // just for the sanity
                 Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
             }
