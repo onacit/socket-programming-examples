@@ -19,7 +19,17 @@ class Rfc863Tcp_AllServers {
             Rfc863Tcp4Server_AsynchronousServerSocketChannel_Future.class
     );
 
+    /**
+     * Starts processes of {@link #CLASSES}.
+     *
+     * @param args an array of command line arguments.
+     */
     public static void main(final String... args) {
         __Utils.startAll(CLASSES);
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    private Rfc863Tcp_AllServers() {
+        throw new AssertionError("instantiation is not allowed");
     }
 }

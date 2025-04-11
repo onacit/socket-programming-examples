@@ -16,7 +16,7 @@ class Rfc863Tcp2Client_SocketChannel_Blocking extends Rfc863Tcp$Client {
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = SocketChannel.open()) { // IOException
             // ----------------------------------------------------------------------------------------- bind (optional)
-            if (ThreadLocalRandom.current().nextBoolean()) {
+            if (_Constants.TCP_CLIENT_BIND) {
                 assert !client.socket().isBound();
                 client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0)); // IOException
                 assert client.socket().isBound();
@@ -30,11 +30,11 @@ class Rfc863Tcp2Client_SocketChannel_Blocking extends Rfc863Tcp$Client {
             log.debug("connected to {}, through {}", client.getRemoteAddress(), client.getLocalAddress());
             assert client.socket().isBound();
             // ------------------------------------------------------------------------------- shutdown input (optional)
-            if (_Constants.SHUTDOWN_INPUT_IN_CLIENT_SIDE) {
+            if (_Constants.TCP_CLIENT_SHUTDOWN_INPUT) {
                 log.debug("shutting down the input...");
                 client.shutdownInput(); // IOException
-                final var r = client.read(ByteBuffer.allocate(1)); // IOException
-                assert r == -1: "expected as the input has been shut down";
+                final var r = client.read(ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(2))); // IOException
+                assert r == -1 : "shouldn't read; as the input has been shut down";
             }
             // --------------------------------------------------------------------- read 'quit', and close the <client>
             __Utils.readQuitAndClose(true, client);
@@ -45,6 +45,7 @@ class Rfc863Tcp2Client_SocketChannel_Blocking extends Rfc863Tcp$Client {
                 final var w = client.write(src); // IOException
                 assert src.capacity() == 0 || w >= 0;
                 if (_Constants.THROTTLE) {
+                    // just for the sanity
                     Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
                 }
             }

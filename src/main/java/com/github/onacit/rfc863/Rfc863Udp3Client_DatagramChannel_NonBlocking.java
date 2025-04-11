@@ -18,40 +18,26 @@ class Rfc863Udp3Client_DatagramChannel_NonBlocking extends Rfc863Udp$Client {
     public static void main(final String... args) throws Exception {
         try (var selector = Selector.open();
              var client = DatagramChannel.open()) { // IOException
+            assert client.isBlocking(); // !!!
             // ----------------------------------------------------------------------------------------- bind (optional)
-            if (ThreadLocalRandom.current().nextBoolean()) {
+            if (_Constants.UDP_CLIENT_BIND) {
                 assert !client.socket().isBound();
                 client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0)); // IOException
                 assert client.socket().isBound();
                 log.debug("bound to {}", client.getLocalAddress()); // IOException
             }
             // -------------------------------------------------------------------------------------- connect (optional)
-            if (ThreadLocalRandom.current().nextBoolean()) {
+            if (_Constants.UDP_CLIENT_CONNECT) {
                 assert !client.isConnected();
                 client.connect(_Constants.SERVER_ENDPOINT); // IOException
                 assert client.isConnected();
                 log.debug("connected to {}", client.getRemoteAddress()); // IOException
             }
             // ---------------------------------------------------------------------------------- confiture non-blocking
-            assert client.isBlocking(); // !!!
             client.configureBlocking(false);
             assert !client.isBlocking();
             // ------------------------------------------------------------------------- register <client> to <selector>
             final var clientKey = client.register(selector, 0); // ClosedChannelException
-            // ------------------------------------------ start a new thread periodically sets <OP_WRITE> to <clientKey>
-            Thread.ofPlatform().name("write-op-setter").daemon(true).start(() -> {
-                while (clientKey.isValid()) {
-                    try {
-                        Thread.sleep(Duration.ofMillis(ThreadLocalRandom.current().nextInt(1024)));
-                    } catch (final InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        clientKey.cancel();
-                        selector.wakeup();
-                    }
-                    clientKey.interestOps(SelectionKey.OP_WRITE);
-                    selector.wakeup();
-                }
-            });
             // -------------------------------------------------- read 'quit', and cancel <clientKey>, wakeup <selector>
             __Utils.readQuitAndRun(true, () -> {
                 clientKey.cancel();
@@ -74,9 +60,25 @@ class Rfc863Udp3Client_DatagramChannel_NonBlocking extends Rfc863Udp$Client {
                         final var w = ((DatagramChannel) channel).send(src, _Constants.SERVER_ENDPOINT); // IOException
                         assert w >= 0;
                         assert !src.hasRemaining();
-                        key.interestOpsAnd(~SelectionKey.OP_WRITE);
-                        assert key.isWritable(); // still
+                        if (_Constants.THROTTLE) {
+                            key.interestOpsAnd(~SelectionKey.OP_WRITE);
+                            assert key.isWritable(); // still
+                            Thread.ofVirtual().name("write-op-setter").start(() -> {
+                                while (clientKey.isValid()) {
+                                    try {
+                                        Thread.sleep(Duration.ofMillis(ThreadLocalRandom.current().nextInt(1024)));
+                                        clientKey.interestOps(SelectionKey.OP_WRITE);
+                                        selector.wakeup();
+                                    } catch (final InterruptedException ie) {
+                                        Thread.currentThread().interrupt();
+                                        clientKey.cancel();
+                                        selector.wakeup();
+                                    }
+                                }
+                            });
+                        }
                     }
+                    log.error("you're not supposed to see me!");
                 }
             }
         }

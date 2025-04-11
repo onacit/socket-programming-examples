@@ -13,7 +13,7 @@ import java.util.List;
 class Rfc863Tcp_AllClients {
 
     /**
-     * An unmodifiable list of all subclasses extend {@link Rfc863Tcp$Client}.
+     * An unmodifiable list of all subclasses of {@link Rfc863Tcp$Client}.
      */
     static final List<Class<? extends Rfc863Tcp$Client>> CLASSES = List.of(
             Rfc863Tcp1Client_Socket.class,
@@ -26,11 +26,16 @@ class Rfc863Tcp_AllClients {
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
-     * Starts all process of {@link #CLASSES}.
+     * Starts all processes of {@link #CLASSES}.
      *
-     * @param args command line arguments
+     * @param args an array of command line arguments
      */
     public static void main(final String... args) {
         __Utils.startAll(CLASSES);
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    private Rfc863Tcp_AllClients() {
+        throw new AssertionError("instantiation is not allowed");
     }
 }

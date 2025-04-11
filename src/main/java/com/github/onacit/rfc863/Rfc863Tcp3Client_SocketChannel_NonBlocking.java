@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -20,7 +19,7 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
         try (var selector = Selector.open(); // IOException
              var client = SocketChannel.open()) { // IOException
             // ----------------------------------------------------------------------------------------- bind (optional)
-            if (_Constants.BIND_CLIENT_EXPLICITLY) {
+            if (_Constants.TCP_CLIENT_BIND) {
                 assert !client.socket().isBound();
                 client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0));
                 assert client.socket().isBound();
@@ -37,14 +36,14 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                           client.getRemoteAddress(), // IOException
                           client.getLocalAddress() // IOException
                 );
-                clientKey = client.register(selector, SelectionKey.OP_WRITE); // ClosedChannelException
                 // --------------------------------------------------------------------------- shutdown input (optional)
-                if (_Constants.SHUTDOWN_INPUT_IN_CLIENT_SIDE) {
-                    log.debug("shutting down the input...");
-                    client.shutdownInput();
-                    final var r = client.read(ByteBuffer.allocate(1));
-                    assert r == -1 : "expected as the input has been shut down";
+                if (_Constants.TCP_CLIENT_SHUTDOWN_INPUT) {
+                    client.shutdownInput(); // IOException
+                    final var r = client.read(ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(2)));
+                    assert r == -1 : "expected; as the input has been shut down";
                 }
+                // -------------------------------------------------- register <client> to the <selector> for <OP_WRITE>
+                clientKey = client.register(selector, SelectionKey.OP_WRITE); // ClosedChannelException
             } else {
                 log.debug("not, immediately, connected");
                 clientKey = client.register(selector, SelectionKey.OP_CONNECT); // ClosedChannelException
@@ -76,9 +75,8 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                                   client.getLocalAddress() // IOException
                         );
                         // ------------------------------------------------------------------- shutdown input (optional)
-                        if (_Constants.SHUTDOWN_INPUT_IN_CLIENT_SIDE) {
-                            log.debug("shutting down the input...");
-                            client.shutdownInput();
+                        if (_Constants.TCP_CLIENT_SHUTDOWN_INPUT) {
+                            client.shutdownInput(); // IOException
                             final var r = client.read(ByteBuffer.allocate(1));
                             assert r == -1 : "expected; as the input has been shut down";
                         }
@@ -86,33 +84,36 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                         key.interestOpsAnd(~SelectionKey.OP_CONNECT);
                         // ------------------------------------------------------------------------------ set <OP_WRITE>
                         key.interestOpsOr(SelectionKey.OP_WRITE);
-                        // ---------------------- if <THROTTLE>, periodically set <OP_WRITE>, and wake up the< selector>
-                        if (_Constants.THROTTLE) {
-                            Thread.ofVirtual().start(() -> {
-                                assert Thread.currentThread().isDaemon();
-                                while (!Thread.currentThread().isInterrupted() && key.isValid()) {
-                                    try {
-                                        Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
-                                    } catch (final InterruptedException ie) {
-                                        Thread.currentThread().interrupt();
-                                        key.cancel();
-                                        selector.wakeup();
-                                    }
-                                    key.interestOps(SelectionKey.OP_WRITE);
-                                    selector.wakeup();
-                                }
-                            });
-                        }
                     }
                     // ------------------------------------------------------------------------------------------- write
                     if (key.isWritable()) {
                         __Utils.randomizeAvailableAndContent(src);
                         final var w = client.write(src); // IOException
-                        assert w > 0;
+                        assert w >= 0;
                         // --------------------------------------------------------------- if <THROTTLE>, unset OP_WRITE
                         if (_Constants.THROTTLE) {
+                            // just for the sanity
                             key.interestOpsAnd(~SelectionKey.OP_WRITE);
+                            Thread.ofVirtual().start(() -> {
+                                assert Thread.currentThread().isDaemon();
+                                try {
+                                    Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
+                                    key.interestOps(SelectionKey.OP_WRITE);
+                                    selector.wakeup();
+                                } catch (final InterruptedException ie) {
+                                    Thread.currentThread().interrupt();
+                                    key.cancel();
+                                    assert !key.isValid();
+                                    selector.wakeup();
+                                }
+                            });
                         }
+                        continue;
+                    }
+                    // -------------------------------------------------------------------------------------------- read
+                    if (key.isReadable()) {
+                        assert false : "never registered for <OP_READ>";
+                        continue;
                     }
                 }
             }

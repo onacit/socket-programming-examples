@@ -16,6 +16,7 @@ class Rfc863Udp3Server_DatagramChannel_NonBlocking extends Rfc863Udp$Server {
     public static void main(final String... args) throws Exception {
         try (var selector = Selector.open();
              var server = DatagramChannel.open()) {
+            assert server.isBlocking(); // !!!
             // ------------------------------------------------------------------------------- try to reuse address/port
             try {
                 server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
@@ -34,7 +35,6 @@ class Rfc863Udp3Server_DatagramChannel_NonBlocking extends Rfc863Udp$Server {
             assert server.socket().isBound();
             log.info("bound to {}", server.getLocalAddress()); // IOException
             // ---------------------------------------------------------------------------------- configure non-blocking
-            assert server.isBlocking();
             server.configureBlocking(false); // IOException
             assert !server.isBlocking();
             // ----------------------------------------------------------- register <server> to <selector> for <OP_READ>

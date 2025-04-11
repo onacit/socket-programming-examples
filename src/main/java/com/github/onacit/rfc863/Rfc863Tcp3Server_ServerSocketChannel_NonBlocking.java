@@ -26,8 +26,7 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc863Tcp$Server 
             } catch (final UnsupportedOperationException uoe) {
                 // empty
             }
-            server.socket().setReuseAddress(
-                    true); // SocketException // -> setOption(SO_REUSEADDR, TRUE) // TODO: remove
+            server.socket().setReuseAddress(true); // SocketException // -> setOption(SO_REUSEADDR, TRUE)
             // ---------------------------------------------------------------------------------------------------- bind
             assert !server.socket().isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
@@ -74,7 +73,7 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc863Tcp$Server 
                                   client.getLocalAddress() // IOException
                         );
                         // ---------------------------------------------------------------- shutdown output (optionally)
-                        if (_Constants.SHUTDOWN_OUTPUT_IN_SERVER_SIDE) {
+                        if (_Constants.TCP_SERVER_SHUTDOWN_OUTPUT) {
                             log.debug("shutting down the output...");
                             client.shutdownOutput(); // IOException
                             try {

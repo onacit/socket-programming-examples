@@ -1,9 +1,11 @@
 package com.github.onacit.rfc863;
 
+import com.github.onacit.__Constants;
 import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
@@ -23,11 +25,15 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = AsynchronousSocketChannel.open()) { // IOException
+            // ----------------------------------------------------------------------------------------- bind (optional)
+            if (_Constants.TCP_CLIENT_BIND) {
+                client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0));
+                log.debug("bound to {}", client.getLocalAddress());
+            }
             // ----------------------------------------------------------------------------------------- prepare a latch
             final var latch = new CountDownLatch(1);
             // -------------------------------------------------------------------------- read 'quit', break the <latch>
             __Utils.readQuitAndCountDown(true, latch);
-            // ----------------------------------------------------------------------------------- try to shutdown input
             // --------------------------------------------------------------------------------- connect, asynchronously
             client.connect(
                     _Constants.SERVER_ENDPOINT, // <remote>
@@ -43,17 +49,19 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
                                 log.error("failed to get address from {}", client, ioe);
                             }
                             // --------------------------------------------------------------- shutdown input (optional)
-                            try {
-                                client.shutdownInput();
-                                client.read(ByteBuffer.allocate(1), null, new CompletionHandler<>() { // TODO: remove
-                                    @Override public void completed(final Integer result, Object attachment) {
-                                        assert result == -1;
-                                    }
-                                    @Override public void failed(final Throwable exc, Object attachment) {
-                                        assert false;
-                                    }});
-                            } catch (final IOException ioe) {
-                                log.error("failed to shutdown input of {}", client, ioe);
+                            if (_Constants.TCP_CLIENT_SHUTDOWN_INPUT) {
+                                try {
+                                    client.shutdownInput(); // IOException
+                                    client.read(ByteBuffer.allocate(1), null, new CompletionHandler<>() {
+                                        @Override public void completed(final Integer result, Object attachment) {
+                                            assert result == -1;
+                                        }
+                                        @Override public void failed(final Throwable exc, Object attachment) {
+                                            assert false;
+                                        }});
+                                } catch (final IOException ioe) {
+                                    log.error("failed to shutdown input", ioe);
+                                }
                             }
                             // --------------------------------------------------------------- keep sending random bytes
                             final var src = ByteBuffer.allocate(1);

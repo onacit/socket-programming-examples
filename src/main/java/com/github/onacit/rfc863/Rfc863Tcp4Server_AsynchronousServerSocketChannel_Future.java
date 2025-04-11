@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 class Rfc863Tcp4Server_AsynchronousServerSocketChannel_Future extends Rfc863Tcp$Server {
@@ -38,12 +39,24 @@ class Rfc863Tcp4Server_AsynchronousServerSocketChannel_Future extends Rfc863Tcp$
                     final var client = accepting.get(); // InterruptedException, ExecutionException
                     executor.submit(() -> {
                         try {
-                            final var remoteAddress = client.getRemoteAddress(); // IOException
                             log.debug("accepted from {}, through {}",
-                                      remoteAddress,
+                                      client.getRemoteAddress(), // IOException
                                       client.getLocalAddress() // IOException
                             );
-                            final var dst = ByteBuffer.allocate(1); // increase the capacity, if you want to.
+                            // -------------------------------------------------------------- shutdown output (optional)
+                            if (_Constants.TCP_SERVER_SHUTDOWN_OUTPUT) {
+                                log.debug("shutting down output...");
+                                client.shutdownOutput(); // IOException
+                                final var src = ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(2));
+                                try {
+                                    client.write(src).get(); // InterruptedException, ExecutionException
+                                    assert false;
+                                } catch (final ExecutionException ee) {
+                                    log.debug("failed to write; expected; as output has been shut down", ee);
+                                }
+                            }
+                            // ---------------------------------------------------------------------------- keep reading
+                            final var dst = ByteBuffer.allocate(1);
                             assert dst.capacity() > 0;
                             while (server.isOpen()) {
                                 final var reading = client.read(dst.clear());
@@ -54,7 +67,8 @@ class Rfc863Tcp4Server_AsynchronousServerSocketChannel_Future extends Rfc863Tcp$
                                 assert r > 0;
                                 for (dst.flip(); dst.hasRemaining(); ) {
                                     log.debug("discarding {} received from {}", String.format("0x%02X", dst.get()),
-                                              remoteAddress);
+                                              client.getRemoteAddress() // IOException
+                                    );
                                 }
                             }
                         } finally {

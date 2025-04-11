@@ -32,11 +32,16 @@ final class _Constants {
     static final boolean THROTTLE = true;
 
     // -----------------------------------------------------------------------------------------------------------------
-    static final boolean BIND_CLIENT_EXPLICITLY = true;
+    static final boolean TCP_CLIENT_BIND = true;
 
-    static final boolean SHUTDOWN_INPUT_IN_CLIENT_SIDE = true;
+    static final boolean TCP_CLIENT_SHUTDOWN_INPUT = true;
 
-    static final boolean SHUTDOWN_OUTPUT_IN_SERVER_SIDE = true;
+    static final boolean TCP_SERVER_SHUTDOWN_OUTPUT = true;
+
+    // -----------------------------------------------------------------------------------------------------------------
+    static final boolean UDP_CLIENT_BIND = true;
+
+    static final boolean UDP_CLIENT_CONNECT = true;
 
     // -----------------------------------------------------------------------------------------------------------------
     private _Constants() {

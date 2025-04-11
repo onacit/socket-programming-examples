@@ -18,29 +18,31 @@ class Rfc863Udp1Client_DatagramSocket extends Rfc863Udp$Client {
         try (var client = new DatagramSocket(null)) { // -> close() -> IOException
             // ----------------------------------------------------------------------------------------- bind (optional)
             assert !client.isBound();
-            if (ThreadLocalRandom.current().nextBoolean()) {
+            if (_Constants.UDP_CLIENT_BIND) {
                 client.setReuseAddress(true); // SocketException // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0)); // IOException
                 assert client.isBound();
                 log.debug("bound to {}", client.getLocalSocketAddress());
             }
             // -------------------------------------------------------------------------------------- connect (optional)
-            assert client.isConnected();
-            if (ThreadLocalRandom.current().nextBoolean()) {
+            assert !client.isConnected();
+            if (_Constants.UDP_CLIENT_CONNECT) {
                 client.connect(_Constants.SERVER_ENDPOINT); // SocketException
                 assert client.isConnected();
                 log.debug("connected to {}", client.getRemoteSocketAddress());
             }
-            // ------------------------------------------------------------------------- read 'quit', and close <client>
+            // --------------------------------------------------------------------- read 'quit', and close the <client>
             __Utils.readQuitAndCall(true, () -> {
                 if (client.isConnected()) {
                     try {
                         client.disconnect(); // UncheckedIOException
+                        assert !client.isConnected();
                     } catch (final UncheckedIOException uioe) {
                         log.error("failed to disconnect {}", client, uioe);
                     }
                 }
                 client.close();
+                assert client.isClosed();
                 return null;
             });
             // ---------------------------------------------------------------------------------------- prepare a packet
@@ -57,6 +59,7 @@ class Rfc863Udp1Client_DatagramSocket extends Rfc863Udp$Client {
                 final var length = ThreadLocalRandom.current().nextInt(data.length + 1);
                 packet.setLength(length);
                 client.send(packet); // IOException
+                // just for the sanity
                 Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
             }
         }

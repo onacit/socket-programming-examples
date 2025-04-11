@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * .
+ * An abstract class for {@code UDP} servers implement the <a href="https://www.rfc-editor.org/rfc/rfc863">RFC 863</a>.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */

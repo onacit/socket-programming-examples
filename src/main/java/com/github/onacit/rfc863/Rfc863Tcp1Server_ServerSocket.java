@@ -46,7 +46,7 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
                         final var remoteAddress = client.getRemoteSocketAddress();
                         log.debug("accepted from {}", remoteAddress);
                         // ------------------------------------------------------------------ shutdown output (optional)
-                        if (_Constants.SHUTDOWN_OUTPUT_IN_SERVER_SIDE) {
+                        if (_Constants.TCP_SERVER_SHUTDOWN_OUTPUT) {
                             client.shutdownOutput(); // IOException
                             try {
                                 client.getOutputStream().write(0);

@@ -17,7 +17,10 @@ class Rfc863Tcp4Client_AsynchronousSocketChannel_Future extends Rfc863Tcp$Client
     public static void main(final String... args) throws IOException, InterruptedException, ExecutionException {
         try (var client = AsynchronousSocketChannel.open()) { // IOException
             // ----------------------------------------------------------------------------------------- bind (optional)
-            client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0));
+            if (_Constants.TCP_CLIENT_BIND) {
+                client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0));
+                log.debug("bound to {}", client.getLocalAddress());
+            }
             // ------------------------------------------------------------------------------------------------- connect
             final var connecting = client.connect(_Constants.SERVER_ENDPOINT);
             final var result = connecting.get(); // InterruptedException, ExecutionException
@@ -27,15 +30,11 @@ class Rfc863Tcp4Client_AsynchronousSocketChannel_Future extends Rfc863Tcp$Client
                       client.getLocalAddress() // IOException
             );
             // ------------------------------------------------------------------------------- shutdown input (optional)
-            if (ThreadLocalRandom.current().nextBoolean()) {
+            if (_Constants.TCP_CLIENT_SHUTDOWN_INPUT) {
                 client.shutdownInput(); // IOException
-                try { // TODO: remove
-                    final var r = client.read(ByteBuffer.allocate(1)).get();
-                    log.debug("r: {}; expected as the input has been shut down", r);
-                    assert r == -1;
-                } catch (final ExecutionException ie) {
-                    // expected
-                }
+                final var dst = ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(2));
+                final var r = client.read(dst).get(); // InterruptedException, ExecutionException
+                assert r == -1 : "as the input has been shut down";
             }
             // --------------------------------------------------------------------- read 'quit', and close the <client>
             __Utils.readQuitAndClose(true, client);

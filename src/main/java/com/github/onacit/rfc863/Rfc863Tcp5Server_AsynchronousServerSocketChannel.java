@@ -10,7 +10,6 @@ import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 
 /**
  * .
@@ -54,22 +53,25 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                             } catch (final IOException ioe) {
                                 log.error("failed to get remote address of {}", client, ioe);
                             }
-                            // ------------------------------------------------------------------ try to shutdown output
-                            try {
-                                client.shutdownOutput(); // IOException
-                                try { // TODO: remove
-                                    client.write(ByteBuffer.allocate(1)).get();
-                                    throw new RuntimeException("shouldn't be here!");
-                                } catch (final InterruptedException ie) {
-                                    // don't care
-                                } catch (final ExecutionException ee) {
-                                    // expected
+                            // -------------------------------------------------------------- shutdown output (optional)
+                            if (_Constants.TCP_SERVER_SHUTDOWN_OUTPUT) {
+                                try {
+                                    client.shutdownOutput(); // IOException
+                                    client.write(ByteBuffer.allocate(1), null, new CompletionHandler<>() {
+                                        @Override public void completed(final Integer result, final Object attachment) {
+                                            log.debug("completed");
+                                            assert false: "aaa";
+                                        }
+                                        @Override public void failed(Throwable exc, Object attachment) {
+                                            log.debug("failed to write; expected; output has been shut down", exc);
+                                        }
+                                    });
+                                } catch (final IOException ioe) {
+                                    log.error("failed to shutdown output of {}", client, ioe);
                                 }
-                            } catch (final IOException ioe) {
-                                log.error("failed to shutdown output of {}", client, ioe);
                             }
                             // ------------------------------------------------------------------------------------ read
-                            final var dst = ByteBuffer.allocate(1);
+                            final var dst = ByteBuffer.allocate(1); // may increase the capacity
                             assert dst.capacity() > 0;
                             client.read(
                                     dst,                        // <dst>
@@ -80,7 +82,7 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                                                 try {
                                                     client.close();
                                                 } catch (final IOException ioe) {
-                                                    log.error("failed to close " + client, ioe);
+                                                    log.error("failed to close {}", client, ioe);
                                                 }
                                                 return;
                                             }

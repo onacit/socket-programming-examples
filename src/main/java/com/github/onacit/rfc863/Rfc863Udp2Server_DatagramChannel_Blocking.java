@@ -30,7 +30,7 @@ class Rfc863Udp2Server_DatagramChannel_Blocking extends Rfc863Udp$Server {
             // ---------------------------------------------------------------------------------------------------- bind
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException
             log.info("bound to {}", server.getLocalAddress());
-            // ------------------------------------------------------------------------- read 'quit', and close <server>
+            // --------------------------------------------------------------------- read 'quit', and close the <server>
             __Utils.readQuitAndClose(true, server);
             // -------------------------------------------------------------------- prepare a datagram buffer to receive
             final var dst = ByteBuffer.allocate(__Constants.UDP_PAYLOAD_MAX);
