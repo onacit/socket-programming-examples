@@ -1,4 +1,4 @@
-package com.github.onacit.rfc864;
+package com.github.onacit.rfc862;
 
 import com.github.onacit.__Constants;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 final class _Constants {
 
     // -----------------------------------------------------------------------------------------------------------------
-    static final int PORT = __Rfc864_Constants.PORT + 20000;
+    static final int PORT = __Rfc862_Constants.PORT + 20000;
 
     // -----------------------------------------------------------------------------------------------------------------
     static final SocketAddress SERVER_ENDPOINT_TO_BIND = new InetSocketAddress(__Constants.ANY_LOCAL, PORT);
@@ -25,7 +25,7 @@ final class _Constants {
             SERVER_ENDPOINT = new InetSocketAddress(InetAddress.getByName("::1"), PORT);
 //            SERVER_ENDPOINT = new InetSocketAddress(InetAddress.getLocalHost(), PORT);
         } catch (final UnknownHostException uhe) {
-            throw new RuntimeException("failed to get the address of the local host", uhe);
+            throw new ExceptionInInitializerError("failed to get the address of the local host; " + uhe.getMessage());
         }
     }
 
@@ -35,13 +35,7 @@ final class _Constants {
     // -----------------------------------------------------------------------------------------------------------------
     static final boolean TCP_CLIENT_BIND = true;
 
-    static final boolean TCP_CLIENT_SHUTDOWN_INPUT = ThreadLocalRandom.current().nextBoolean();
-
-    static final boolean TCP_SERVER_SHUTDOWN_OUTPUT = ThreadLocalRandom.current().nextBoolean();
-
     // -----------------------------------------------------------------------------------------------------------------
-    static final int UDP_DATA_LENGTH = 512;
-
     static final boolean UDP_CLIENT_BIND = ThreadLocalRandom.current().nextBoolean();
 
     static final boolean UDP_CLIENT_CONNECT = ThreadLocalRandom.current().nextBoolean();

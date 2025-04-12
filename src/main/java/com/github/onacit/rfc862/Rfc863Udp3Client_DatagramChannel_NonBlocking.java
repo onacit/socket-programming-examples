@@ -1,4 +1,4 @@
-package com.github.onacit.rfc863;
+package com.github.onacit.rfc862;
 
 import com.github.onacit.__Constants;
 import com.github.onacit.__Utils;

@@ -3,6 +3,9 @@ package com.github.onacit;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Objects;
@@ -284,6 +287,19 @@ public final class __Utils {
             waitForProcess(process);
             assert !process.isAlive();
         }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    public static SocketAddress getSocketAddress(final int port, final String... args) {
+        InetAddress host;
+        try {
+            host = InetAddress.getByName(args[0]);
+        } catch (final ArrayIndexOutOfBoundsException aioobe) {
+            host = __Constants.ANY_LOCAL;
+        } catch (final UnknownHostException uhe) {
+            throw new RuntimeException("unknown host: " + args[0], uhe);
+        }
+        return null;
     }
 
     // -----------------------------------------------------------------------------------------------------------------

@@ -11,6 +11,9 @@ public final class __Rfc864_Constants {
     public static final String PATTERN =
             "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
 
+    public static final int UDP_SERVER_CHARACTERS_MAX = 512;
+
+    // -----------------------------------------------------------------------------------------------------------------
     private __Rfc864_Constants() {
         throw new AssertionError("instantiation is not allowed");
     }
