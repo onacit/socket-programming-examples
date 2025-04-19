@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 public final class __Constants {
@@ -37,6 +39,13 @@ public final class __Constants {
 
     // -----------------------------------------------------------------------------------------------------------------
     public static final int UDP_PAYLOAD_MAX = 65527;
+
+    // -----------------------------------------------------------------------------------------------------------------
+//    public static final Charset CHARSET = StandardCharsets.UTF_8;
+    public static final Charset CHARSET = Charset.defaultCharset();
+
+    // -----------------------------------------------------------------------------------------------------------------
+    public static final String QUIT = "!quit";
 
     // -----------------------------------------------------------------------------------------------------------------
     private __Constants() {

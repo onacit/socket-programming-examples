@@ -4,13 +4,12 @@ import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 
 @Slf4j
-class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc862Tcp$Server {
+class Rfc862Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc862Tcp$Server {
 
     public static void main(final String... args) throws IOException {
         try (var selector = Selector.open(); // IOException
@@ -26,7 +25,6 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc862Tcp$Server 
             } catch (final UnsupportedOperationException uoe) {
                 // empty
             }
-            server.socket().setReuseAddress(true); // SocketException // -> setOption(SO_REUSEADDR, TRUE)
             // ---------------------------------------------------------------------------------------------------- bind
             assert !server.socket().isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
@@ -36,76 +34,82 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc862Tcp$Server 
             assert server.isBlocking();
             server.configureBlocking(false); // IOException
             assert !server.isBlocking();
-            // ----------------------------------------------------------------- register the <server> to the <selector>
-            final SelectionKey serverKey = server.register(selector, SelectionKey.OP_ACCEPT); // ClosedChannelException
-            // --------------------------- read 'quit', cancel the <serverKey>, close all clients, wakeup the <selector>
+            // --------------------------------------------------------- register <server> to <selector> for <OP_ACCEPT>
+            final SelectionKey serverKey = server.register(
+                    selector,              // <sel>
+                    SelectionKey.OP_ACCEPT // <ops>
+            ); // ClosedChannelException
+            // ---------------------------------- read '!quit', cancel <serverKey>, close all clients, wakeup <selector>
             __Utils.readQuitAndRun(true, () -> {
                 serverKey.cancel();
                 assert !serverKey.isValid();
-                selector.keys().stream()
-                        .map(SelectionKey::channel)
-                        .filter(c -> c instanceof SocketChannel)
-                        .forEach(c -> {
+                selector.keys()
+                        .stream()
+                        .filter(k -> k.channel() instanceof SocketChannel)
+                        .forEach(k -> {
                             try {
-                                c.close();
+                                k.channel().close();
+                                assert !k.isValid();
                             } catch (final IOException ioe) {
-                                throw new RuntimeException("failed to close " + c, ioe);
+                                throw new RuntimeException("failed to close " + k.channel(), ioe);
                             }
                         });
                 selector.wakeup();
             });
             // ------------------------------------------------------------------ keep selecting, handling selected keys
-            final var dst = ByteBuffer.allocate(1);
-            assert dst.capacity() > 0;
             while (serverKey.isValid()) {
                 final var count = selector.select(0); // IOException
                 assert count >= 0;
                 for (var i = selector.selectedKeys().iterator(); i.hasNext(); i.remove()) {
                     final var key = i.next();
                     final var channel = key.channel();
-                    // ------------------------------------------------------------------------------------------ accept
+                    // ---------------------------------------------------------------------------- acceptable -> accept
                     if (key.isAcceptable()) {
+                        assert channel instanceof ServerSocketChannel;
                         assert channel == server;
                         final var client = ((ServerSocketChannel) channel).accept(); // IOException
-                        final var remoteAddress = client.getRemoteAddress(); // IOException
                         log.debug("accepted from {}, through {}",
-                                  remoteAddress,
+                                  client.getRemoteAddress(),
                                   client.getLocalAddress() // IOException
                         );
-                        // ---------------------------------------------------------------- shutdown output (optionally)
-                        if (_Constants.TCP_SERVER_SHUTDOWN_OUTPUT) {
-                            log.debug("shutting down the output...");
-                            client.shutdownOutput(); // IOException
-                            try {
-                                client.write(ByteBuffer.allocate(1));
-                                assert false;
-                            } catch (final IOException ioe) {
-                                log.debug("expected; as the output has been shut down", ioe);
-                            }
-                        }
                         // ---------------------------------------------------------------------- configure non-blocking
                         assert client.isBlocking();
                         client.configureBlocking(false); // IOException
                         assert !client.isBlocking();
-                        // ----------------------------------- register the <client> to the <selector> for the <OP_READ>
-                        final var clientKey = client.register(selector, SelectionKey.OP_READ); // ClosedChannelException
-                        // ------------------------------------------------------------------ attach the <remoteAddress>
-                        clientKey.attach(remoteAddress);
+                        // ------------------------------------------- register <client> to <selector> for the <OP_READ>
+                        final var clientKey = client.register(
+                                selector,              // <sel>
+                                SelectionKey.OP_READ,  // <ops>
+                                ByteBuffer.allocate(1) // <att>
+                        ); // ClosedChannelException
                     }
-                    // -------------------------------------------------------------------------------------------- read
-                    if (key.isReadable()) {
+                    // -------------------------------------------------------------------------------- readable -> read
+                    if (key.isReadable()) { // CanceledKeyException
                         assert channel instanceof SocketChannel;
-                        final var attachment = key.attachment();
-                        assert attachment instanceof SocketAddress;
-                        final var r = ((ReadableByteChannel) channel).read(dst.clear()); // IOException
+                        final var buffer = (ByteBuffer) key.attachment();
+                        final var r = ((ReadableByteChannel) channel).read(buffer); // IOException
                         if (r == -1) {
-                            channel.close();
+                            key.cancel();
                             assert !key.isValid();
                             continue;
                         }
-                        assert r > 0;
-                        for (dst.flip(); dst.hasRemaining(); ) {
-                            log.debug("discarding {} received from {}", String.format("0x%02X", dst.get()), attachment);
+                        assert r >= 0; // why?
+                        if (buffer.position() > 0) {
+                            key.interestOpsOr(SelectionKey.OP_WRITE);
+                        }
+                    }
+                    // -------------------------------------------------------------------------------- writable -> send
+                    if (key.isWritable()) {
+                        assert channel instanceof SocketChannel;
+                        final var buffer = (ByteBuffer) key.attachment();
+                        assert buffer.position() > 0;
+                        buffer.flip();
+                        assert buffer.hasRemaining();
+                        final var w = ((WritableByteChannel) channel).write(buffer); // IOException
+                        assert w > 0;
+                        buffer.compact();
+                        if (buffer.position() == 0) {
+                            key.interestOpsAnd(~SelectionKey.OP_WRITE);
                         }
                     }
                 }
