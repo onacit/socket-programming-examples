@@ -113,8 +113,7 @@ public final class __Utils {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-
-    static void readLinesUntil(final BufferedReader reader, final Predicate<? super String> predicate)
+    public static void readLinesUntil(final BufferedReader reader, final Predicate<? super String> predicate)
             throws IOException {
         Objects.requireNonNull(reader, "reader is null");
         for (String l; (l = reader.readLine()) != null; ) {
@@ -124,7 +123,7 @@ public final class __Utils {
         }
     }
 
-    static void readLinesUntil(final Reader reader, final Predicate<? super String> predicate)
+    public static void readLinesUntil(final Reader reader, final Predicate<? super String> predicate)
             throws IOException {
         Objects.requireNonNull(reader, "reader is null");
         readLinesUntil(new BufferedReader(reader), predicate);
@@ -134,6 +133,33 @@ public final class __Utils {
             throws IOException {
         Objects.requireNonNull(stream, "stream is null");
         readLinesUntil(new InputStreamReader(stream), predicate);
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    public static void readLinesWhile(final BufferedReader reader, final Predicate<? super String> predicate)
+            throws IOException {
+        readLinesUntil(
+                reader,
+                predicate.negate()
+        );
+    }
+
+    public static void readLinesWhile(final Reader reader, final Predicate<? super String> predicate)
+            throws IOException {
+        Objects.requireNonNull(reader, "reader is null");
+        readLinesWhile(
+                new BufferedReader(reader),
+                predicate
+        );
+    }
+
+    public static void readLinesWhile(final InputStream stream, final Predicate<? super String> predicate)
+            throws IOException {
+        Objects.requireNonNull(stream, "stream is null");
+        readLinesWhile(
+                new InputStreamReader(stream),
+                predicate
+        );
     }
 
     // -----------------------------------------------------------------------------------------------------------------

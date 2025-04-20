@@ -28,26 +28,30 @@ class Rfc862Tcp5Server_AsynchronousServerSocketChannel extends Rfc862Tcp$Server 
     public static void main(final String... args) throws IOException, InterruptedException {
         final var group = AsynchronousChannelGroup.withThreadPool(Executors.newVirtualThreadPerTaskExecutor());
         try (var server = AsynchronousServerSocketChannel.open()) { // IOException
-            // ------------------------------------------------------------------------------- try to reuse address/port
+            // -------------------------------------------------------------------------------------------- SO_REUSEADDR
             try {
                 server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
             } catch (final UnsupportedOperationException uhe) {
                 // empty
             }
+            // -------------------------------------------------------------------------------------------- SO_REUSEPORT
             try {
                 server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
             } catch (final UnsupportedOperationException uhe) {
                 // empty
             }
             // ---------------------------------------------------------------------------------------------------- bind
-            server.bind(
-                    __Utils.parseSocketAddress(_Constants.PORT, args)
-                            .orElse(_Constants.SERVER_ENDPOINT_TO_BIND)
-            ); // IOException
+            final var local = __Utils.parseSocketAddress(_Constants.PORT, args)
+                    .orElse(_Constants.SERVER_ENDPOINT_TO_BIND);
+            server.bind(local); // IOException
             log.info("bound to {}", server.getLocalAddress()); // IOException
             // -------------------------------------------------------------------------- read 'quit', break the <latch>
-            __Utils.readQuitAndShutdownNow(true, group, l -> {
-            });
+            __Utils.readQuitAndShutdownNow(
+                    true,  // <daemon>
+                    group, // <group>
+                    l -> { // <consumer>
+                    }
+            );
             // -------------------------------------------------------------------------------------------------- accept
             server.accept(null, new CompletionHandler<>() {
                 @Override
@@ -64,13 +68,10 @@ class Rfc862Tcp5Server_AsynchronousServerSocketChannel extends Rfc862Tcp$Server 
                         @Override
                         public void completed(final Integer r, final Object attachment) {
                             if (r == -1) {
-                                try {
-                                    client.close();
-                                } catch (final IOException ioe) {
-                                    log.error("failed to close {}", client, ioe);
-                                }
                                 return;
                             }
+                            assert r > 0;
+                            assert buffer.position() > 0;
                             final var latch = new CountDownLatch(1);
                             buffer.flip();
                             client.write(buffer, null, new CompletionHandler<>() {
@@ -90,12 +91,6 @@ class Rfc862Tcp5Server_AsynchronousServerSocketChannel extends Rfc862Tcp$Server 
                                     latch.countDown();
                                 }
                             });
-                            try {
-                                latch.await();
-                            } catch (final InterruptedException ie) {
-                                failed(ie, attachment);
-                                return;
-                            }
                             client.read(buffer, null, this);
                         }
 
