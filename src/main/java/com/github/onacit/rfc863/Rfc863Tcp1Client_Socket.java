@@ -15,6 +15,9 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
 @Slf4j
+@SuppressWarnings({
+        "java:S101" // Class names should comply with a naming convention
+})
 class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
@@ -28,7 +31,7 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
             }
             // ------------------------------------------------------------------------------------------------- connect
             assert !client.isConnected();
-            client.connect(_Constants.SERVER_ENDPOINT, _Constants.TCP_CLIENT_TIMEOUT); // IOException
+            client.connect(_Constants.SERVER_ENDPOINT, _Constants.TCP_CLIENT_CONNECT_TIMEOUT); // IOException
             assert client.isConnected();
             assert client.isBound(); // !!!
             log.debug("connected to {}, through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
@@ -50,7 +53,7 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
                     log.debug("expected; as the input has been shut down", ioe);
                 }
             }
-            // ------------------------------------------------------------------------- read `quit`, and close <client>
+            // ------------------------------------------------------------------------ read `!quit`, and close <client>
             __Utils.readQuitAndClose(true, client);
             // ------------------------------------------------------------------------------- keep sending random bytes
             while (!client.isClosed()) {

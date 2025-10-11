@@ -48,7 +48,7 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                 log.debug("not, immediately, connected");
                 clientKey = client.register(selector, SelectionKey.OP_CONNECT); // ClosedChannelException
             }
-            // ------------------------------------------ read 'quit', cancel the <clientKey>, and wakeup the <selector>
+            // ---------------------------------------- read '!quit', cancel the <clientKey>, and wake up the <selector>
             __Utils.readQuitAndCall(true, () -> {
                 clientKey.cancel();
                 assert !clientKey.isValid();
@@ -59,7 +59,7 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
             for (final var src = ByteBuffer.allocate(1); clientKey.isValid(); ) {
                 // ---------------------------------------------------------------------------------------------- select
                 final var count = selector.select(0L); // IOException
-                assert count >= 0; // why not 1?
+                assert count >= 0; // why not just one?
                 // -------------------------------------------------------------------------------- handle selected keys
                 for (final var i = selector.selectedKeys().iterator(); i.hasNext(); i.remove()) {
                     final var key = i.next();
@@ -84,35 +84,35 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                         key.interestOpsAnd(~SelectionKey.OP_CONNECT);
                         // ------------------------------------------------------------------------------ set <OP_WRITE>
                         key.interestOpsOr(SelectionKey.OP_WRITE);
+                        assert !key.isWritable();
                     }
                     // ------------------------------------------------------------------------------------------- write
                     if (key.isWritable()) {
                         __Utils.randomizeAvailableAndContent(src);
+                        assert src.hasRemaining();
                         final var w = client.write(src); // IOException
-                        assert w >= 0;
+                        assert w >= 0; // hmm...
                         // --------------------------------------------------------------- if <THROTTLE>, unset OP_WRITE
                         if (_Constants.TCP_CLIENT_THROTTLE) {
-                            // just for the sanity
                             key.interestOpsAnd(~SelectionKey.OP_WRITE);
                             Thread.ofVirtual().start(() -> {
                                 assert Thread.currentThread().isDaemon();
                                 try {
                                     Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
                                     key.interestOps(SelectionKey.OP_WRITE);
-                                    selector.wakeup();
                                 } catch (final InterruptedException ie) {
                                     Thread.currentThread().interrupt();
                                     key.cancel();
                                     assert !key.isValid();
-                                    selector.wakeup();
                                 }
+                                selector.wakeup();
                             });
                         }
                         continue;
                     }
-                    // -------------------------------------------------------------------------------------------- read
+                    // ------------------------------------------------------------------------------------------- read?
                     if (key.isReadable()) {
-                        assert false : "never registered for <OP_READ>";
+                        assert false : "never has been registered for <OP_READ>";
                         continue;
                     }
                 }

@@ -45,7 +45,6 @@ class Rfc863Tcp2Client_SocketChannel_Blocking extends Rfc863Tcp$Client {
                 final var w = client.write(src); // IOException
                 assert src.capacity() == 0 || w >= 0;
                 if (_Constants.TCP_CLIENT_THROTTLE) {
-                    // just for the sanity
                     Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
                 }
             }

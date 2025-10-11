@@ -54,7 +54,7 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND, _Constants.TCP_SERVER_BACKLOG); // IOException
             assert server.isBound();
             log.info("bound to {}", server.getLocalSocketAddress());
-            // --------------------------------------------------------------------- read 'quit', and close the <server>
+            // -------------------------------------------------------------------- read '!quit', and close the <server>
             __Utils.readQuitAndClose(true, server);
             // ------------------------------------------------------------------------------------------ keep accepting
             while (!server.isClosed()) {
@@ -75,7 +75,7 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
                         }
                         // ------------------------------------------------------------------------------ keep receiving
                         for (int b; (b = client.getInputStream().read()) != -1 && !server.isClosed(); ) { // IOException
-                            log.debug("discarding {} received from {}", String.format("0x%02X", b), remoteAddress);
+                            log.debug("discarding {}, received from {}", String.format("0x%02X", b), remoteAddress);
                         }
                     } finally {
                         client.close(); // IOException

@@ -33,9 +33,9 @@ final class _Constants {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    static final boolean TCP_CLIENT_BIND = true;
+    static final boolean TCP_CLIENT_BIND = false;
 
-    static final int TCP_CLIENT_TIMEOUT = 0;
+    static final int TCP_CLIENT_CONNECT_TIMEOUT = 0;
 
     static final boolean TCP_CLIENT_SHUTDOWN_INPUT = false;
 

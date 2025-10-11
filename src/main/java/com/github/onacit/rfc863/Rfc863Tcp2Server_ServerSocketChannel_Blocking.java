@@ -13,30 +13,41 @@ import java.util.concurrent.ThreadLocalRandom;
 @Slf4j
 class Rfc863Tcp2Server_ServerSocketChannel_Blocking extends Rfc863Tcp$Server {
 
+    /**
+     * .
+     *
+     * @param args an array of command line arguments.
+     * @throws IOException if an I/O error occurs.
+     */
     public static void main(final String... args) throws IOException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor();
              var server = ServerSocketChannel.open()) { // IOException
             // ------------------------------------------------------------------------------- try to reuse address/port
-            try {
-                server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
-            } catch (final UnsupportedOperationException uoe) {
-                // empty
+            {
+                if (false) {
+                    server.socket().setReuseAddress(true);
+                }
+                try {
+                    server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
+                    log.debug("set {}", StandardSocketOptions.SO_REUSEADDR);
+                } catch (final UnsupportedOperationException uoe) {
+                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, uoe);
+                }
+                try {
+                    server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
+                    log.debug("set {}", StandardSocketOptions.SO_REUSEPORT);
+                } catch (final UnsupportedOperationException uoe) {
+                    log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, uoe);
+                }
             }
-            try {
-                server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
-            } catch (final UnsupportedOperationException uoe) {
-                // empty
-            }
-            server.socket().setReuseAddress(
-                    true); // SocketException // -> setOption(SO_REUSEADDR, TRUE) // TODO: remove
             // ---------------------------------------------------------------------------------------------------- bind
             assert !server.socket().isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             assert server.socket().isBound();
             log.info("bound to {}", server.getLocalAddress());
-            // --------------------------------------------------------------------- read 'quit', and close the <server>
+            // -------------------------------------------------------------------- read '!quit', and close the <server>
             __Utils.readQuitAndClose(true, server);
-            // ---------------------------------------------------------------------------------------------------------
+            // ------------------------------------------- keep accepting clients and start a new thread for each client
             assert server.isBlocking(); // !!!
             while (server.isOpen()) {
                 final var client = server.accept(); // IOException
@@ -57,15 +68,14 @@ class Rfc863Tcp2Server_ServerSocketChannel_Blocking extends Rfc863Tcp$Server {
                         }
                         // ------------------------------------------------------------------------------ keep receiving
                         final var dst = ByteBuffer.allocate(1);
-                        assert dst.capacity() > 0;
                         while (server.isOpen()) {
                             final var r = client.read(dst.clear()); // IOException
                             if (r == -1) {
                                 break;
                             }
-                            assert dst.capacity() == 0 || r > 0;
+                            assert r > 0;
                             for (dst.flip(); dst.hasRemaining(); ) {
-                                log.debug("discarding {} received from {}", String.format("0x%1$02X", dst.get()),
+                                log.debug("discarding {}, received from {}", String.format("0x%1$02X", dst.get()),
                                           remoteAddress);
                             }
                         }
