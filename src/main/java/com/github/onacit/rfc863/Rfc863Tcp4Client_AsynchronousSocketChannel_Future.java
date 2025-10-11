@@ -46,7 +46,7 @@ class Rfc863Tcp4Client_AsynchronousSocketChannel_Future extends Rfc863Tcp$Client
                 final var writing = client.write(src);
                 final var w = writing.get(); // InterruptedException, ExecutionException
                 assert w >= 0;
-                if (_Constants.THROTTLE) {
+                if (_Constants.TCP_CLIENT_THROTTLE) {
                     Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
                 }
             }

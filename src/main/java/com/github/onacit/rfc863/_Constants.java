@@ -10,6 +10,9 @@ import java.net.UnknownHostException;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
+@SuppressWarnings({
+        "java:S101" // Class names should comply with a naming convention
+})
 final class _Constants {
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -30,14 +33,18 @@ final class _Constants {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    static final boolean THROTTLE = true;
-
-    // -----------------------------------------------------------------------------------------------------------------
     static final boolean TCP_CLIENT_BIND = true;
 
-    static final boolean TCP_CLIENT_SHUTDOWN_INPUT = ThreadLocalRandom.current().nextBoolean();
+    static final int TCP_CLIENT_TIMEOUT = 0;
 
-    static final boolean TCP_SERVER_SHUTDOWN_OUTPUT = ThreadLocalRandom.current().nextBoolean();
+    static final boolean TCP_CLIENT_SHUTDOWN_INPUT = false;
+
+    static final boolean TCP_CLIENT_THROTTLE = true;
+
+    // -----------------------------------------------------------------------------------------------------------------
+    static final int TCP_SERVER_BACKLOG = 50;
+
+    static final boolean TCP_SERVER_SHUTDOWN_CLIENT_OUTPUT = false;
 
     // -----------------------------------------------------------------------------------------------------------------
     static final boolean UDP_CLIENT_BIND = ThreadLocalRandom.current().nextBoolean();

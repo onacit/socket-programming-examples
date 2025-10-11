@@ -71,7 +71,7 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
                                     null,                                      // <attachment>
                                     new CompletionHandler<>() {                // <handler>
                                         @Override public void completed(final Integer result, final Object attachment) {
-                                            if (_Constants.THROTTLE) {
+                                            if (_Constants.TCP_CLIENT_THROTTLE) {
                                                 try {
                                                     Thread.sleep(ThreadLocalRandom.current().nextInt(1024));
                                                 } catch (final InterruptedException ie) {

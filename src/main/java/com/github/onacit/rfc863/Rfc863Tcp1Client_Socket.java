@@ -28,7 +28,7 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
             }
             // ------------------------------------------------------------------------------------------------- connect
             assert !client.isConnected();
-            client.connect(_Constants.SERVER_ENDPOINT); // IOException
+            client.connect(_Constants.SERVER_ENDPOINT, _Constants.TCP_CLIENT_TIMEOUT); // IOException
             assert client.isConnected();
             assert client.isBound(); // !!!
             log.debug("connected to {}, through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
@@ -40,14 +40,14 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
                     final var b = client.getInputStream().read(); // IOException
                     assert false : "shouldn't read; as the input has been shut down";
                 } catch (final IOException ioe) {
-                    log.info("expected; as the input has been shut down", ioe);
+                    log.debug("expected; as the input has been shut down", ioe);
                 }
                 try {
                     final var r = client.getInputStream()
                             .read(new byte[ThreadLocalRandom.current().nextInt(2)]); // IOException
                     assert false : "shouldn't read; as the input has been shut down";
                 } catch (final IOException ioe) {
-                    log.info("expected; as the input has been shut down", ioe);
+                    log.debug("expected; as the input has been shut down", ioe);
                 }
             }
             // ------------------------------------------------------------------------- read `quit`, and close <client>
@@ -55,7 +55,7 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
             // ------------------------------------------------------------------------------- keep sending random bytes
             while (!client.isClosed()) {
                 client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // IOException
-                if (_Constants.THROTTLE) {
+                if (_Constants.TCP_CLIENT_THROTTLE) {
                     Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
                 }
             }

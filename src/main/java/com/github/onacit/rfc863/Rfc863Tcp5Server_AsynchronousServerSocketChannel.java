@@ -54,7 +54,7 @@ class Rfc863Tcp5Server_AsynchronousServerSocketChannel extends Rfc863Tcp$Server 
                                 log.error("failed to get remote address of {}", client, ioe);
                             }
                             // -------------------------------------------------------------- shutdown output (optional)
-                            if (_Constants.TCP_SERVER_SHUTDOWN_OUTPUT) {
+                            if (_Constants.TCP_SERVER_SHUTDOWN_CLIENT_OUTPUT) {
                                 try {
                                     client.shutdownOutput(); // IOException
                                     client.write(ByteBuffer.allocate(1), null, new CompletionHandler<>() {

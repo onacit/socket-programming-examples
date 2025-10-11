@@ -73,7 +73,7 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc863Tcp$Server 
                                   client.getLocalAddress() // IOException
                         );
                         // ---------------------------------------------------------------- shutdown output (optionally)
-                        if (_Constants.TCP_SERVER_SHUTDOWN_OUTPUT) {
+                        if (_Constants.TCP_SERVER_SHUTDOWN_CLIENT_OUTPUT) {
                             log.debug("shutting down the output...");
                             client.shutdownOutput(); // IOException
                             try {

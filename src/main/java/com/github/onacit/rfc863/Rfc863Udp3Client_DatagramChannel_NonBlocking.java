@@ -66,7 +66,7 @@ class Rfc863Udp3Client_DatagramChannel_NonBlocking extends Rfc863Udp$Client {
                         } catch (final PortUnreachableException pue) {
                             log.error("failed to send", pue);
                         }
-                        if (_Constants.THROTTLE) {
+                        if (_Constants.TCP_CLIENT_THROTTLE) {
                             key.interestOpsAnd(~SelectionKey.OP_WRITE);
                             assert key.isWritable(); // still
                             Thread.ofVirtual().name("write-op-setter").start(() -> {

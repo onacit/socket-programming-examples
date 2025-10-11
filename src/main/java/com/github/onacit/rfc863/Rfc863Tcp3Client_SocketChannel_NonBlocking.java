@@ -91,7 +91,7 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                         final var w = client.write(src); // IOException
                         assert w >= 0;
                         // --------------------------------------------------------------- if <THROTTLE>, unset OP_WRITE
-                        if (_Constants.THROTTLE) {
+                        if (_Constants.TCP_CLIENT_THROTTLE) {
                             // just for the sanity
                             key.interestOpsAnd(~SelectionKey.OP_WRITE);
                             Thread.ofVirtual().start(() -> {

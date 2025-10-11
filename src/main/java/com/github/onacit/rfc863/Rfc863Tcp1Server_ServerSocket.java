@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.SocketException;
 import java.net.StandardSocketOptions;
 import java.util.concurrent.Executors;
 
@@ -14,26 +15,43 @@ import java.util.concurrent.Executors;
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
 @Slf4j
+@SuppressWarnings({
+        "java:S101" // Class names should comply with a naming convention
+})
 class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
 
+    /**
+     * .
+     *
+     * @param args an array of command line arguments.
+     * @throws IOException if an I/O error occurs.
+     */
     public static void main(final String... args) throws IOException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor();
              var server = new ServerSocket()) { // IOException
             // -------------------------------------------------------------------------------------- reuse address/port
+            if (false) {
+                try {
+                    server.setReuseAddress(true);
+                } catch (final SocketException se) {
+                    log.error("failed to set reuseAddress", se);
+                }
+            }
             try {
                 server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
+                log.debug("set {}", StandardSocketOptions.SO_REUSEADDR);
             } catch (final UnsupportedOperationException uoe) {
-                // empty
+                log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, uoe);
             }
             try {
                 server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
+                log.debug("set {}", StandardSocketOptions.SO_REUSEPORT);
             } catch (final UnsupportedOperationException uoe) {
-                // empty
+                log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, uoe);
             }
-            server.setReuseAddress(true); // SocketException // -> setOption(SO_REUSEADDR, TRUE) // TODO: remove!
             // ---------------------------------------------------------------------------------------------------- bind
             assert !server.isBound();
-            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND); // IOException
+            server.bind(_Constants.SERVER_ENDPOINT_TO_BIND, _Constants.TCP_SERVER_BACKLOG); // IOException
             assert server.isBound();
             log.info("bound to {}", server.getLocalSocketAddress());
             // --------------------------------------------------------------------- read 'quit', and close the <server>
@@ -46,13 +64,13 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
                         final var remoteAddress = client.getRemoteSocketAddress();
                         log.debug("accepted from {}", remoteAddress);
                         // ------------------------------------------------------------------ shutdown output (optional)
-                        if (_Constants.TCP_SERVER_SHUTDOWN_OUTPUT) {
+                        if (_Constants.TCP_SERVER_SHUTDOWN_CLIENT_OUTPUT) {
                             client.shutdownOutput(); // IOException
                             try {
                                 client.getOutputStream().write(0); // IOException
                                 assert false : "shouldn't be here";
                             } catch (final IOException ioe) {
-                                log.info("expected; as the output has been shut down", ioe);
+                                log.debug("expected; as the output has been shut down", ioe);
                             }
                         }
                         // ------------------------------------------------------------------------------ keep receiving
@@ -64,7 +82,7 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
                     }
                     return null;
                 });
-            }
-        }
-    }
+            } // end-of-while
+        } // end-of-try-with-resources
+    } // end-of-main
 }

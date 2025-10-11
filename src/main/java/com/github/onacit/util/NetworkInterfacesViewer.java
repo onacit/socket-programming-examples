@@ -49,10 +49,10 @@ import java.util.Optional;
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  * @see NetworkInterfacesPrinter
  */
+@Slf4j
 @SuppressWarnings({
         "java:S1199" // nested code block
 })
-@Slf4j
 class NetworkInterfacesViewer extends _AbstractViewer {
 
     private static final String NAME = "Network Interfaces Properties";

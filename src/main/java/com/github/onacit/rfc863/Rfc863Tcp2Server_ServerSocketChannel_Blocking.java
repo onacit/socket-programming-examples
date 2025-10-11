@@ -45,7 +45,7 @@ class Rfc863Tcp2Server_ServerSocketChannel_Blocking extends Rfc863Tcp$Server {
                         final var remoteAddress = client.getRemoteAddress(); // IOException
                         log.debug("accepted from {}", remoteAddress);
                         // ------------------------------------------------------------------ shutdown output (optional)
-                        if (_Constants.TCP_SERVER_SHUTDOWN_OUTPUT) {
+                        if (_Constants.TCP_SERVER_SHUTDOWN_CLIENT_OUTPUT) {
                             client.shutdownOutput(); // IOException
                             final var src = ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(2)); // IOException
                             try {

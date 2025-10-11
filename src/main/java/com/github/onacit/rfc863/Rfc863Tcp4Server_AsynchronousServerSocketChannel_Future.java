@@ -44,7 +44,7 @@ class Rfc863Tcp4Server_AsynchronousServerSocketChannel_Future extends Rfc863Tcp$
                                       client.getLocalAddress() // IOException
                             );
                             // -------------------------------------------------------------- shutdown output (optional)
-                            if (_Constants.TCP_SERVER_SHUTDOWN_OUTPUT) {
+                            if (_Constants.TCP_SERVER_SHUTDOWN_CLIENT_OUTPUT) {
                                 log.debug("shutting down output...");
                                 client.shutdownOutput(); // IOException
                                 final var src = ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(2));
