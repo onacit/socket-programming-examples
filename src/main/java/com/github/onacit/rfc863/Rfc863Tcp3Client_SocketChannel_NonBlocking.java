@@ -39,8 +39,14 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                 // --------------------------------------------------------------------------- shutdown input (optional)
                 if (_Constants.TCP_CLIENT_SHUTDOWN_INPUT) {
                     client.shutdownInput(); // IOException
-                    final var r = client.read(ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(2)));
-                    assert r == -1 : "expected; as the input has been shut down";
+                    {
+                        final var r = client.read(ByteBuffer.allocate(0)); // IOException
+                        assert r == -1;
+                    }
+                    {
+                        final var r = client.read(ByteBuffer.allocate(1)); // IOException
+                        assert r == -1;
+                    }
                 }
                 // -------------------------------------------------- register <client> to the <selector> for <OP_WRITE>
                 clientKey = client.register(selector, SelectionKey.OP_WRITE); // ClosedChannelException
@@ -56,7 +62,9 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                 return null;
             });
             // ------------------------------------------------------------------------------- keep sending random bytes
-            for (final var src = ByteBuffer.allocate(1); clientKey.isValid(); ) {
+            final var src = ByteBuffer.allocate(1);
+            assert src.capacity() > 0;
+            while (clientKey.isValid()) {
                 // ---------------------------------------------------------------------------------------------- select
                 final var count = selector.select(0L); // IOException
                 assert count >= 0; // why not just one?
@@ -77,8 +85,14 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                         // ------------------------------------------------------------------- shutdown input (optional)
                         if (_Constants.TCP_CLIENT_SHUTDOWN_INPUT) {
                             client.shutdownInput(); // IOException
-                            final var r = client.read(ByteBuffer.allocate(1));
-                            assert r == -1 : "expected; as the input has been shut down";
+                            {
+                                final var r = client.read(ByteBuffer.allocate(0)); // IOException
+                                assert r == -1;
+                            }
+                            {
+                                final var r = client.read(ByteBuffer.allocate(1)); // IOException
+                                assert r == -1;
+                            }
                         }
                         // -------------------------------------------------------------------------- unset <OP_CONNECT>
                         key.interestOpsAnd(~SelectionKey.OP_CONNECT);
@@ -88,8 +102,10 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                     }
                     // ------------------------------------------------------------------------------------------- write
                     if (key.isWritable()) {
-                        __Utils.randomizeAvailableAndContent(src);
-                        assert src.hasRemaining();
+                        {
+                            __Utils.randomizeAvailableAndContent(src);
+                            assert src.hasRemaining();
+                        }
                         final var w = client.write(src); // IOException
                         assert w >= 0; // hmm...
                         // --------------------------------------------------------------- if <THROTTLE>, unset OP_WRITE
@@ -98,7 +114,9 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
                             Thread.ofVirtual().start(() -> {
                                 assert Thread.currentThread().isDaemon();
                                 try {
-                                    Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
+                                    Thread.sleep(
+                                            ThreadLocalRandom.current().nextLong(1024L) + 1024L
+                                    ); // InterruptedException
                                     key.interestOps(SelectionKey.OP_WRITE);
                                 } catch (final InterruptedException ie) {
                                     Thread.currentThread().interrupt();

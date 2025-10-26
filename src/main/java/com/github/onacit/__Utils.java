@@ -14,6 +14,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.charset.Charset;
+import java.util.Formatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -400,14 +401,14 @@ public final class __Utils {
      * @return given {@code buffer}.
      */
     public static <T extends ByteBuffer> T randomizeRemaining(final T buffer) {
-        Objects.requireNonNull(buffer, "buffer is null");
-
-//        buffer.position(buffer.position() + ThreadLocalRandom.current().nextInt(buffer.remaining() + 1));
-//        buffer.limit(buffer.limit() - ThreadLocalRandom.current().nextInt(buffer.remaining() + 1));
-
-        buffer.limit(ThreadLocalRandom.current().nextInt(buffer.capacity() + 1));
-        buffer.position(ThreadLocalRandom.current().nextInt(buffer.remaining() + 1));
-
+        if (Objects.requireNonNull(buffer, "buffer is null").capacity() == 0) {
+            throw new IllegalArgumentException("zero-capacity buffer: " + buffer);
+        }
+        buffer.limit(ThreadLocalRandom.current().nextInt(1, buffer.capacity() + 1));
+        assert buffer.limit() > 0;
+        buffer.position(ThreadLocalRandom.current().nextInt(buffer.limit()));
+        assert buffer.position() < buffer.limit();
+        assert buffer.hasRemaining();
         return buffer;
     }
 
@@ -536,6 +537,24 @@ public final class __Utils {
                 .filter(p -> p >= 0 && p <= 65535)
                 .orElse(defaultPort);
         return Optional.of(new InetSocketAddress(host, port));
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    private static final ThreadLocal<Formatter> OCTET_FORMATTER = ThreadLocal.withInitial(
+            () -> new Formatter(new StringBuilder(4))
+    );
+
+    /**
+     * Returns a string of the specified octet formatted in {@code 0x02X} form.
+     *
+     * @param octet the octet to format.
+     * @return a formatted string of the {@code octet}.
+     */
+    public static String formatOctet(final int octet) {
+        final var formatter = OCTET_FORMATTER.get();
+        final var appendable = (StringBuilder) formatter.out();
+        appendable.delete(0, appendable.length());
+        return formatter.format("0x%1$02X", octet & 0xFF).toString();
     }
 
     // -----------------------------------------------------------------------------------------------------------------

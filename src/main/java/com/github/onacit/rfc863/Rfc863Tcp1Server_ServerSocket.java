@@ -25,10 +25,13 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
      *
      * @param args an array of command line arguments.
      * @throws IOException if an I/O error occurs.
+     * @see <a
+     * href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/net/ServerSocket.html">java.net.ServerSocket</a>
      */
     public static void main(final String... args) throws IOException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor();
              var server = new ServerSocket()) { // IOException
+            assert !server.isBound();
             // -------------------------------------------------------------------------------------- reuse address/port
             if (false) {
                 try {
@@ -39,18 +42,15 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
             }
             try {
                 server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
-                log.debug("set {}", StandardSocketOptions.SO_REUSEADDR);
             } catch (final UnsupportedOperationException uoe) {
                 log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, uoe);
             }
             try {
                 server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
-                log.debug("set {}", StandardSocketOptions.SO_REUSEPORT);
             } catch (final UnsupportedOperationException uoe) {
                 log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, uoe);
             }
             // ---------------------------------------------------------------------------------------------------- bind
-            assert !server.isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND, _Constants.TCP_SERVER_BACKLOG); // IOException
             assert server.isBound();
             log.info("bound to {}", server.getLocalSocketAddress());
@@ -61,8 +61,8 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
                 final var client = server.accept(); // IOException
                 executor.submit(() -> {
                     try {
-                        final var remoteAddress = client.getRemoteSocketAddress();
-                        log.debug("accepted from {}", remoteAddress);
+                        final var address = client.getRemoteSocketAddress();
+                        log.debug("accepted from {}", address);
                         // ------------------------------------------------------------------ shutdown output (optional)
                         if (_Constants.TCP_SERVER_SHUTDOWN_CLIENT_OUTPUT) {
                             client.shutdownOutput(); // IOException
@@ -70,19 +70,20 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
                                 client.getOutputStream().write(0); // IOException
                                 assert false : "shouldn't be here";
                             } catch (final IOException ioe) {
-                                log.debug("expected; as the output has been shut down", ioe);
+                                // expected
                             }
                         }
                         // ------------------------------------------------------------------------------ keep receiving
                         for (int b; (b = client.getInputStream().read()) != -1 && !server.isClosed(); ) { // IOException
-                            log.debug("discarding {}, received from {}", String.format("0x%02X", b), remoteAddress);
+                            // TODO: use __Utils.formatOctet(octet) method
+                            log.debug("discarding {}, received from {}", String.format("0x%02X", b), address);
                         }
                     } finally {
                         client.close(); // IOException
                     }
                     return null;
                 });
-            } // end-of-while
-        } // end-of-try-with-resources
-    } // end-of-main
+            }
+        }
+    }
 }

@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 @Slf4j
 public final class __Constants {
@@ -31,7 +30,7 @@ public final class __Constants {
             }
         }
         if (anyLocal == null) {
-            throw new RuntimeException("failed to get any local address");
+            throw new RuntimeException("failed to get any-local address");
         }
         ANY_LOCAL = anyLocal;
         log.debug("any local: {}", ANY_LOCAL);

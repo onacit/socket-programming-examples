@@ -10,7 +10,7 @@ import java.net.Socket;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * A minimal TCP client that connects to a server and sends a random byte to it.
+ * A TCP client that connects to a server and sends a random byte to it.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
@@ -20,11 +20,21 @@ import java.util.concurrent.ThreadLocalRandom;
 })
 class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
 
+    /**
+     * The main method of this program.
+     *
+     * @param args an array of command line arguments.
+     * @throws IOException          if an I/O error occurs.
+     * @throws InterruptedException if interrupted while running.
+     * @see <a
+     * href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/net/Socket.html">java.net.Socket</a>
+     */
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = new Socket()) { // -> close() -> IOException
+            assert !client.isConnected();
             // ----------------------------------------------------------------------------------------- bind (optional)
             if (_Constants.TCP_CLIENT_BIND) {
-                assert !client.isBound();
+                assert !client.isBound() : "client is already bound";
                 client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0));
                 assert client.isBound();
                 log.debug("bound to {}", client.getLocalSocketAddress());
@@ -41,16 +51,21 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
                 client.shutdownInput(); // IOException
                 try {
                     final var b = client.getInputStream().read(); // IOException
-                    assert false : "shouldn't read; as the input has been shut down";
+                    assert false;
                 } catch (final IOException ioe) {
-                    log.debug("expected; as the input has been shut down", ioe);
+                    // expected
                 }
                 try {
-                    final var r = client.getInputStream()
-                            .read(new byte[ThreadLocalRandom.current().nextInt(2)]); // IOException
-                    assert false : "shouldn't read; as the input has been shut down";
+                    final var r = client.getInputStream().read(new byte[0]);
+                    assert false;
                 } catch (final IOException ioe) {
-                    log.debug("expected; as the input has been shut down", ioe);
+                    // expected
+                }
+                try {
+                    final var r = client.getInputStream().read(new byte[1]);
+                    assert false;
+                } catch (final IOException ioe) {
+                    // expected;
                 }
             }
             // ------------------------------------------------------------------------ read `!quit`, and close <client>
@@ -59,7 +74,7 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
             while (!client.isClosed()) {
                 client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // IOException
                 if (_Constants.TCP_CLIENT_THROTTLE) {
-                    Thread.sleep(ThreadLocalRandom.current().nextInt(1024)); // InterruptedException
+                    Thread.sleep(ThreadLocalRandom.current().nextLong(1024L) + 1024L); // InterruptedException
                 }
             }
         }

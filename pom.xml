@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.github.onacit</groupId>
@@ -38,7 +39,7 @@
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
     <maven.compiler.release>${maven.compiler.target}</maven.compiler.release>
-    <maven.compiler.testSource>${maven.compiler.source}</maven.compiler.testSource>
+    <maven.compiler.testSource>25</maven.compiler.testSource>
     <maven.compiler.testTarget>${maven.compiler.testSource}</maven.compiler.testTarget>
     <maven.compiler.testRelase>${maven.compiler.testTarget}</maven.compiler.testRelase>
     <sonar.organization>jinahya-github</sonar.organization>
@@ -92,7 +93,9 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.5.19</version>
+      <!-- https://central.sonatype.com/artifact/ch.qos.logback/logback-parent/versions --> <!-- slf4j-version -->
+      <!-- https://central.sonatype.com/artifact/ch.qos.logback/logback-classic/versions -->
+      <version>1.5.20</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -138,7 +141,9 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>2.1.0-alpha1</version>
+      <!-- https://central.sonatype.com/artifact/ch.qos.logback/logback-parent/ -->
+      <!-- https://central.sonatype.com/artifact/org.slf4j/slf4j-api/versions -->
+      <version>2.0.17</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
@@ -149,7 +154,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-antrun-plugin</artifactId>
-          <version>3.1.0</version>
+          <version>3.2.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -286,7 +291,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
-          <version>3.6.1</version>
+          <version>3.6.2</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -321,7 +326,7 @@
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.13</version>
+          <version>0.8.14</version>
           <executions>
             <execution>
               <id>default-prepare-agent</id>
@@ -356,7 +361,7 @@
             </configuration>
           </execution>
           <execution>
-            <id>enforce-maven</id>
+            <id>enforce-require-maven-version</id>
             <goals>
               <goal>enforce</goal>
             </goals>

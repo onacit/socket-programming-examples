@@ -17,10 +17,13 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc863Tcp$Server 
      *
      * @param args an array of command line arguments.
      * @throws IOException if an I/O error occurs.
+     * @see <a
+     * href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/nio/channels/ServerSocketChannel.html">java.nio.channels.ServerSocketChannel</a>
      */
     public static void main(final String... args) throws IOException {
         try (var selector = Selector.open(); // IOException
              var server = ServerSocketChannel.open()) { // IOException
+            assert !server.socket().isBound();
             // ------------------------------------------------------------------------------- try to reuse address/port
             {
                 if (false) {
@@ -28,19 +31,16 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc863Tcp$Server 
                 }
                 try {
                     server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
-                    log.debug("set {}", StandardSocketOptions.SO_REUSEADDR);
                 } catch (final UnsupportedOperationException uoe) {
                     log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, uoe);
                 }
                 try {
                     server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
-                    log.debug("set {}", StandardSocketOptions.SO_REUSEPORT);
                 } catch (final UnsupportedOperationException uoe) {
                     log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, uoe);
                 }
             }
             // ---------------------------------------------------------------------------------------------------- bind
-            assert !server.socket().isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             assert server.socket().isBound();
             log.info("bound to {}", server.getLocalAddress());
@@ -80,20 +80,23 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc863Tcp$Server 
                     if (key.isAcceptable()) {
                         assert channel == server;
                         final var client = ((ServerSocketChannel) channel).accept(); // IOException
-                        final var remoteAddress = client.getRemoteAddress(); // IOException
+                        final var address = client.getRemoteAddress(); // IOException
                         log.debug("accepted from {}, through {}",
-                                  remoteAddress,
+                                  address,
                                   client.getLocalAddress() // IOException
                         );
                         // ---------------------------------------------------------------- shutdown output (optionally)
                         if (_Constants.TCP_SERVER_SHUTDOWN_CLIENT_OUTPUT) {
-                            log.debug("shutting down the output...");
                             client.shutdownOutput(); // IOException
+                            try {
+                                client.write(ByteBuffer.allocate(0));
+                                assert false;
+                            } catch (final IOException ioe) {
+                            }
                             try {
                                 client.write(ByteBuffer.allocate(1));
                                 assert false;
                             } catch (final IOException ioe) {
-                                log.debug("expected; as the output has been shut down", ioe);
                             }
                         }
                         // ---------------------------------------------------------------------- configure non-blocking
@@ -103,8 +106,8 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc863Tcp$Server 
                         // ----------------------------------- register the <client> to the <selector> for the <OP_READ>
                         final var clientKey = client.register(selector, SelectionKey.OP_READ); // ClosedChannelException
                         assert !clientKey.isReadable();
-                        // ------------------------------------------------------------------ attach the <remoteAddress>
-                        clientKey.attach(remoteAddress);
+                        // ------------------------------------------------------------------ attach the <address>
+                        clientKey.attach(address);
                     }
                     // -------------------------------------------------------------------------------------------- read
                     if (key.isReadable()) {
@@ -119,6 +122,7 @@ class Rfc863Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc863Tcp$Server 
                         }
                         assert r > 0;
                         for (dst.flip(); dst.hasRemaining(); ) {
+                            // TODO: use __Utils#formatOctet(int) 
                             log.debug("discarding {}, received from {}", String.format("0x%02X", dst.get()),
                                       attachment);
                         }

@@ -8,7 +8,6 @@ import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 class Rfc863Tcp2Server_ServerSocketChannel_Blocking extends Rfc863Tcp$Server {
@@ -18,10 +17,13 @@ class Rfc863Tcp2Server_ServerSocketChannel_Blocking extends Rfc863Tcp$Server {
      *
      * @param args an array of command line arguments.
      * @throws IOException if an I/O error occurs.
+     * @see <a
+     * href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/nio/channels/ServerSocketChannel.html">java.nio.channels.ServerSocketChannel</a>
      */
     public static void main(final String... args) throws IOException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor();
              var server = ServerSocketChannel.open()) { // IOException
+            assert !server.socket().isBound();
             // ------------------------------------------------------------------------------- try to reuse address/port
             {
                 if (false) {
@@ -29,19 +31,16 @@ class Rfc863Tcp2Server_ServerSocketChannel_Blocking extends Rfc863Tcp$Server {
                 }
                 try {
                     server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
-                    log.debug("set {}", StandardSocketOptions.SO_REUSEADDR);
                 } catch (final UnsupportedOperationException uoe) {
                     log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, uoe);
                 }
                 try {
                     server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
-                    log.debug("set {}", StandardSocketOptions.SO_REUSEPORT);
                 } catch (final UnsupportedOperationException uoe) {
                     log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, uoe);
                 }
             }
             // ---------------------------------------------------------------------------------------------------- bind
-            assert !server.socket().isBound();
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             assert server.socket().isBound();
             log.info("bound to {}", server.getLocalAddress());
@@ -53,21 +52,27 @@ class Rfc863Tcp2Server_ServerSocketChannel_Blocking extends Rfc863Tcp$Server {
                 final var client = server.accept(); // IOException
                 executor.submit(() -> {
                     try {
-                        final var remoteAddress = client.getRemoteAddress(); // IOException
-                        log.debug("accepted from {}", remoteAddress);
+                        final var address = client.getRemoteAddress(); // IOException
+                        log.debug("accepted from {}", address);
                         // ------------------------------------------------------------------ shutdown output (optional)
                         if (_Constants.TCP_SERVER_SHUTDOWN_CLIENT_OUTPUT) {
                             client.shutdownOutput(); // IOException
-                            final var src = ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(2)); // IOException
-                            try {
-                                client.write(src); // IOException
-                                assert false : "shouldn't be here";
-                            } catch (final IOException ioe) {
-                                log.debug("expected; as the output has been shut down", ioe);
+                            {
+                                try {
+                                    client.write(ByteBuffer.allocate(0)); // IOException
+                                    assert false : "shouldn't be here";
+                                } catch (final IOException ioe) {
+                                }
+                                try {
+                                    client.write(ByteBuffer.allocate(1)); // IOException
+                                    assert false : "shouldn't be here";
+                                } catch (final IOException ioe) {
+                                }
                             }
                         }
                         // ------------------------------------------------------------------------------ keep receiving
                         final var dst = ByteBuffer.allocate(1);
+                        assert dst.capacity() > 0;
                         while (server.isOpen()) {
                             final var r = client.read(dst.clear()); // IOException
                             if (r == -1) {
@@ -75,8 +80,9 @@ class Rfc863Tcp2Server_ServerSocketChannel_Blocking extends Rfc863Tcp$Server {
                             }
                             assert r > 0;
                             for (dst.flip(); dst.hasRemaining(); ) {
+                                // TODO: use __Utils.formatOctet(octet) method
                                 log.debug("discarding {}, received from {}", String.format("0x%1$02X", dst.get()),
-                                          remoteAddress);
+                                          address);
                             }
                         }
                     } finally {
