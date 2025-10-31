@@ -29,7 +29,7 @@ public final class __SocketUtils {
         return s;
     }
 
-    public static <T extends Socket> T SO_REUSEADDR_ON(final T s) throws IOException {
+    public static <T extends Socket> T SO_REUSEADDR(final T s) throws IOException {
         return SO_REUSEADDR(s, Boolean.TRUE);
     }
 
@@ -43,7 +43,7 @@ public final class __SocketUtils {
         return s;
     }
 
-    public static <T extends Socket> T SO_REUSEPORT_ON(final T s) throws IOException {
+    public static <T extends Socket> T SO_REUSEPORT(final T s) throws IOException {
         return SO_REUSEPORT(s, Boolean.TRUE);
     }
 
@@ -74,7 +74,7 @@ public final class __SocketUtils {
         return s;
     }
 
-    public static <T extends ServerSocket> T SO_REUSEPORT_ON(final T s) throws IOException {
+    public static <T extends ServerSocket> T SO_REUSEPORT(final T s) throws IOException {
         return SO_REUSEPORT(s, Boolean.TRUE);
     }
 

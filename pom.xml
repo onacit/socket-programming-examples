@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.github.onacit</groupId>
@@ -9,7 +8,7 @@
   <packaging>jar</packaging>
 
   <name>${project.artifactId}</name>
-  <description>Examples of Java Socket Programming</description>
+  <description>RFC 863 Discard Protocol</description>
   <url>https://github.com/onacit/${project.artifactId}</url>
   <inceptionYear>2025</inceptionYear>
   <organization>
@@ -48,10 +47,9 @@
     <version.maven-surefire>3.5.4</version.maven-surefire>
     <version.maven-failsafe>${version.maven-surefire}</version.maven-failsafe>
     <version.maven-javadoc-plugin>3.12.0</version.maven-javadoc-plugin>
-    <!--    <version.org.junit>5.11.3</version.org.junit>-->
+<!--    <version.org.junit>5.11.3</version.org.junit>-->
     <version.org.junit>6.0.0</version.org.junit>
     <version.org.junit.jupiter>${version.org.junit}</version.org.junit.jupiter>
-    <!--    <version.org.mockito>5.15.2</version.org.mockito>-->
     <version.org.mockito>5.20.0</version.org.mockito>
     <version.org.projectlombok>1.18.42</version.org.projectlombok>
   </properties>
@@ -93,7 +91,6 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <!-- https://central.sonatype.com/artifact/ch.qos.logback/logback-parent/versions --> <!-- slf4j-version -->
       <!-- https://central.sonatype.com/artifact/ch.qos.logback/logback-classic/versions -->
       <version>1.5.20</version>
       <scope>runtime</scope>
@@ -107,6 +104,7 @@
     <dependency><!-- https://central.sonatype.com/artifact/com.formdev/flatlaf -->
       <groupId>com.formdev</groupId>
       <artifactId>flatlaf</artifactId>
+      <version>3.6.2</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -119,7 +117,6 @@
     <dependency>
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>
-      <version>4.3.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -141,8 +138,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <!-- https://central.sonatype.com/artifact/ch.qos.logback/logback-parent/ -->
-      <!-- https://central.sonatype.com/artifact/org.slf4j/slf4j-api/versions -->
+      <!-- https://central.sonatype.com/artifact/ch.qos.logback/logback-parent -->
       <version>2.0.17</version>
       <scope>compile</scope>
     </dependency>
@@ -361,7 +357,7 @@
             </configuration>
           </execution>
           <execution>
-            <id>enforce-require-maven-version</id>
+            <id>enforce-maven</id>
             <goals>
               <goal>enforce</goal>
             </goals>

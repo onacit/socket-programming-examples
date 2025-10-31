@@ -31,6 +31,7 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                 );
                 // ------------------------------------------------------------------ register <clientKey> to <selector>
                 clientKey = client.register(selector, 0); // ClosedChannelException
+                // ------------------------------------------------- read '!quit', cancel <clientKey>, wakeup <selector>
                 __Utils.readQuitAndRun(
                         true,
                         () -> {
