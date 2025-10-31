@@ -30,10 +30,9 @@ final class _Constants {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    static final boolean THROTTLE = true;
+    static final boolean TCP_CLIENT_BIND = ThreadLocalRandom.current().nextBoolean();
 
-    // -----------------------------------------------------------------------------------------------------------------
-    static final boolean TCP_CLIENT_BIND = true;
+    static final boolean TCP_CLIENT_THROTTLE = true;
 
     // -----------------------------------------------------------------------------------------------------------------
     static final boolean UDP_CLIENT_BIND = ThreadLocalRandom.current().nextBoolean();
