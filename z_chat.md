@@ -1,0 +1,31 @@
+# socket-programming-examples
+
+Java socket programming examples.
+
+## Links
+
+### docs.oracle.com
+
+* [Networking IPv6 User Guide](https://docs.oracle.com/javase/8/docs/technotes/guides/net/ipv6_guide/)
+* [Networking Properties](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/net/doc-files/net-properties.html)
+
+### datatracker.ietf.org
+
+* [RFC-791 INTERNET PROTOCOL / DARPA INTERNET PROGRAM / PROTOCOL SPECIFICATION / September 1981][RFC-791]
+* [RFC-768 User Datagram Protocol][RFC-768]
+* [RFC-862 Echo Protocol][RFC-862]
+* [RFC-863 Discard Protocol][RFC-863]
+* [RFC-864 Character Generator Protocol][RFC-864]
+* [RFC-8200 Internet Protocol, Version 6 (IPv6) Specification][RFC-8200]
+
+[RFC-768]: https://datatracker.ietf.org/doc/html/rfc768
+
+[RFC-791]: https://datatracker.ietf.org/doc/html/rfc791
+
+[RFC-862]: https://datatracker.ietf.org/doc/html/rfc862
+
+[RFC-863]: https://datatracker.ietf.org/doc/html/rfc863
+
+[RFC-864]: https://datatracker.ietf.org/doc/html/rfc864
+
+[RFC-8200]: https://datatracker.ietf.org/doc/html/rfc8200

@@ -1,10 +1,8 @@
 package com.github.onacit.rfc863;
 
-final class _Rfc863Constants {
+final class __Rfc863Udp_Server_TestConstants {
 
-    static final int PORT = 9;
-
-    private _Rfc863Constants() {
+    private __Rfc863Udp_Server_TestConstants() {
         throw new AssertionError("instantiation is not allowed");
     }
 }

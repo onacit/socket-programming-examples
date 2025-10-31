@@ -1,0 +1,33 @@
+package com.github.onacit.rfc863;
+
+import com.github.onacit.__TestUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Test;
+
+import java.time.Duration;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@Slf4j
+abstract class Rfc863Udp$Server__Test<T extends Rfc863Udp$Server> {
+
+    Rfc863Udp$Server__Test(final Class<T> serverClass) {
+        super();
+        this.serverClass = Objects.requireNonNull(serverClass, "serverClass is null");
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    @Test
+    void _exited_startAndWriteQuit() throws InterruptedException {
+        // ------------------------------------------------------------------------------------------------ given / when
+        final var process = __TestUtils.startProcessAndWriteQuitIn(serverClass, Duration.ofSeconds(2L));
+        final var exited = process.waitFor(4L, TimeUnit.SECONDS);
+        // -------------------------------------------------------------------------------------------------------- then
+        assertThat(exited).isTrue();
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    final Class<T> serverClass;
+}
