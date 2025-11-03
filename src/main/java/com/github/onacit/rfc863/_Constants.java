@@ -33,7 +33,7 @@ final class _Constants {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    static final boolean TCP_CLIENT_BIND = false;
+    static final boolean TCP_CLIENT_BIND_MANUALLY = false;
 
     static final int TCP_CLIENT_CONNECT_TIMEOUT = 0;
 

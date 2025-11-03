@@ -19,7 +19,7 @@ class Rfc863Tcp3Client_SocketChannel_NonBlocking extends Rfc863Tcp$Client {
         try (var selector = Selector.open(); // IOException
              var client = SocketChannel.open()) { // IOException
             // ----------------------------------------------------------------------------------------- bind (optional)
-            if (_Constants.TCP_CLIENT_BIND) {
+            if (_Constants.TCP_CLIENT_BIND_MANUALLY) {
                 assert !client.socket().isBound();
                 client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0));
                 assert client.socket().isBound();

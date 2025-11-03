@@ -25,7 +25,7 @@ class Rfc863Tcp2Client_SocketChannel_Blocking extends Rfc863Tcp$Client {
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = SocketChannel.open()) { // IOException
             // ----------------------------------------------------------------------------------------- bind (optional)
-            if (_Constants.TCP_CLIENT_BIND) {
+            if (_Constants.TCP_CLIENT_BIND_MANUALLY) {
                 client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0)); // IOException
                 assert client.socket().isBound();
                 log.debug("bound to {}", client.getLocalAddress());

@@ -26,7 +26,7 @@ class Rfc863Tcp5Client_AsynchronousSocketChannel extends Rfc863Tcp$Client {
     public static void main(final String... args) throws IOException, InterruptedException {
         try (var client = AsynchronousSocketChannel.open()) { // IOException
             // ----------------------------------------------------------------------------------------- bind (optional)
-            if (_Constants.TCP_CLIENT_BIND) {
+            if (_Constants.TCP_CLIENT_BIND_MANUALLY) {
                 client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0));
                 log.debug("bound to {}", client.getLocalAddress());
             }

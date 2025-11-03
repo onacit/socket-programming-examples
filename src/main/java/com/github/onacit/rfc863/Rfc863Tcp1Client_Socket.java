@@ -33,17 +33,21 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
         try (var client = new Socket()) { // -> close() -> IOException
             assert !client.isConnected();
             // ----------------------------------------------------------------------------------------- bind (optional)
-            if (_Constants.TCP_CLIENT_BIND) {
+            if (_Constants.TCP_CLIENT_BIND_MANUALLY) {
                 assert !client.isBound() : "client is already bound";
+                assert client.getLocalSocketAddress() == null;
                 client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0));
                 assert client.isBound();
+                assert client.getLocalSocketAddress() != null;
                 log.debug("bound to {}", client.getLocalSocketAddress());
             }
             // ------------------------------------------------------------------------------------------------- connect
             assert !client.isConnected();
             client.connect(_Constants.SERVER_ENDPOINT, _Constants.TCP_CLIENT_CONNECT_TIMEOUT); // IOException
             assert client.isConnected();
+            assert client.getRemoteSocketAddress() != null;
             assert client.isBound(); // !!!
+            assert client.getLocalSocketAddress() != null;
             log.debug("connected to {}, through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
             // ------------------------------------------------------------------------------- shutdown input (optional)
             if (_Constants.TCP_CLIENT_SHUTDOWN_INPUT) {
@@ -70,9 +74,11 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
             }
             // ------------------------------------------------------------------------ read `!quit`, and close <client>
             __Utils.readQuitAndClose(true, client);
-            // ------------------------------------------------------------------------------- keep sending random bytes
-            while (!client.isClosed()) {
-                client.getOutputStream().write(ThreadLocalRandom.current().nextInt(256)); // IOException
+            // ------------------------------------------------------------------------------ keep sending random octets
+            for (int b; !client.isClosed(); ) {
+                b = ThreadLocalRandom.current().nextInt(256); // [0..255]
+                client.getOutputStream().write(b); // IOException
+                client.getOutputStream().flush(); // IOException
                 if (_Constants.TCP_CLIENT_THROTTLE) {
                     Thread.sleep(ThreadLocalRandom.current().nextLong(1024L) + 1024L); // InterruptedException
                 }
