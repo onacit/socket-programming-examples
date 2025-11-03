@@ -544,10 +544,8 @@ public final class __Utils {
             () -> new Formatter(new StringBuilder(4))
     );
 
-    private static final String OCTET_FORMAT = "0x%02X";
-
     /**
-     * Returns a string of the specified octet formatted in {@value #OCTET_FORMAT} form.
+     * Returns a string of the specified octet formatted in {@code 0x02X} form.
      *
      * @param octet the octet to format.
      * @return a formatted string of the {@code octet}.
@@ -556,7 +554,7 @@ public final class __Utils {
         final var formatter = OCTET_FORMATTER.get();
         final var appendable = (StringBuilder) formatter.out();
         appendable.delete(0, appendable.length());
-        return formatter.format(OCTET_FORMAT, octet & 0xFF).toString();
+        return formatter.format("0x%1$02X", octet & 0xFF).toString();
     }
 
     // -----------------------------------------------------------------------------------------------------------------
