@@ -544,6 +544,7 @@ public final class __Utils {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
+    // TODO: ScopedValue!!!
     private static final ThreadLocal<Formatter> OCTET_FORMATTER = ThreadLocal.withInitial(
             () -> new Formatter(new StringBuilder(4))
     );
@@ -557,7 +558,8 @@ public final class __Utils {
     public static String formatOctet(final int octet) {
         final var formatter = OCTET_FORMATTER.get();
         final var appendable = (StringBuilder) formatter.out();
-        appendable.delete(0, appendable.length());
+//        appendable.delete(0, appendable.length());
+        appendable.setLength(0);
         return formatter.format("0x%1$02X", octet & 0xFF).toString();
     }
 
