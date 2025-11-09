@@ -37,6 +37,8 @@ final class _Constants {
     // -----------------------------------------------------------------------------------------------------------------
     static final boolean UDP_CLIENT_BIND = ThreadLocalRandom.current().nextBoolean();
 
+    static final boolean UDP_CLIENT_THROTTLE = true;
+
     static final boolean UDP_CLIENT_CONNECT = ThreadLocalRandom.current().nextBoolean();
 
     // -----------------------------------------------------------------------------------------------------------------

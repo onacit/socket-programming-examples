@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * .
+ * An abstract class for {@code TCP} servers receive requests from {@link Rfc862Tcp$Client} clients.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */

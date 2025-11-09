@@ -11,11 +11,14 @@ import java.net.Socket;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * A minimal TCP client that connects to a server and sends a random byte to it.
+ * An {@link Rfc862Tcp$Client} client program uses {@link Socket}.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
 @Slf4j
+@SuppressWarnings({
+        "java:S101" // Class names should comply with a naming convention
+})
 class Rfc862Tcp1Client_Socket extends Rfc862Tcp$Client {
 
     public static void main(final String... args) throws IOException, InterruptedException {
@@ -34,24 +37,27 @@ class Rfc862Tcp1Client_Socket extends Rfc862Tcp$Client {
             // ------------------------------------------------------------------------------------------------- connect
             final var endpoint = __Utils.parseSocketAddress(_Constants.PORT, args).orElse(_Constants.SERVER_ENDPOINT);
             log.debug("endpoint: {}", endpoint);
-            client.connect(endpoint);
+            client.connect(endpoint); // IOException
             assert client.isConnected();
             assert client.isBound(); // !!!
             log.debug("connected to {}, through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
             // --------------------------------------------------------------------- read '!quit' and close the <client>
             __Utils.readQuitAndClose(true, client);
             // -------------------------------------------------------------------- keep sending/receiving random octets
-            for (int b; !client.isClosed(); ) {
-                b = ThreadLocalRandom.current().nextInt();
-                client.getOutputStream().write(b);
-                client.getOutputStream().flush();
-                final var e = client.getInputStream().read();
+            for (int b, e; !client.isClosed(); ) {
+                // send
+                b = ThreadLocalRandom.current().nextInt(); // [-2,147,483,648..2,147,483,647] @@?
+                client.getOutputStream().write(b); // IOException
+                client.getOutputStream().flush(); // IOException
+                // receive
+                e = client.getInputStream().read(); // IOException
                 if (e == -1) {
-                    log.debug("received EOF from {}", client.getRemoteSocketAddress());
+                    __Utils.logEof(client.getRemoteSocketAddress());
                     break;
                 }
                 assert e == (b & 0xFF); // [0..255]
-                log.debug("echoed, {}, back from {}", String.format("0x%02X", e), client.getRemoteSocketAddress());
+                _Utils.logEchoed(e, client.getRemoteSocketAddress());
+                // ----------------------------------------------------------------------------------------------- sleep
                 if (_Constants.TCP_CLIENT_THROTTLE) {
                     Thread.sleep(ThreadLocalRandom.current().nextLong(1024L) + 1024L); // InterruptedException
                 }

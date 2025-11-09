@@ -180,7 +180,8 @@ public final class __Utils {
     }
 
     /**
-     * Keep reading lines from the {@link System#in standard input stream} until it reads a line contains {@code quit}.
+     * Keep reading lines from the {@link System#in standard input stream} until it reads a line contains
+     * {@value __Constants#QUIT}.
      *
      * @throws IOException if an I/O error occurs.
      */
@@ -190,7 +191,8 @@ public final class __Utils {
 
     /**
      * Starts a new thread which keeps reading lines from the {@link System#in standard input stream} until it reads a
-     * line contains (case-insensitively) '{@code quit}, and then {@link Callable#call() calls} specified task.
+     * line contains (case-insensitively) {@value __Constants#QUIT}, and then {@link Callable#call() calls} specified
+     * task.
      *
      * @param daemon   a flag for starting the thread as s daemon; {@code true} for {@code daemon}; {@code false}
      *                 otherwise.
@@ -215,7 +217,8 @@ public final class __Utils {
 
     /**
      * Starts a new thread which keeps reading lines from the {@link System#in standard input stream} until it reads a
-     * line contains (case-insensitively) '{@code quit}', and then {@link Runnable#run() runs} specified task.
+     * line contains (case-insensitively) {@value __Constants#QUIT}, and then {@link Runnable#run() runs} specified
+     * task.
      *
      * @param daemon   a flag for starting the thread as s daemon; {@code true} for {@code daemon}; {@code false}
      *                 otherwise.
@@ -235,7 +238,7 @@ public final class __Utils {
 
     /**
      * Starts a new thread which keeps reading lines from the {@link System#in standard input stream} until it reads a
-     * line contains (case-insensitively) '{@code quit}', and then {@link Closeable#close() closes} specified
+     * line contains (case-insensitively) {@value __Constants#QUIT}, and then {@link Closeable#close() closes} specified
      * closeable.
      *
      * @param daemon    a flag for starting the thread as s daemon; {@code true} for {@code daemon}; {@code false}
@@ -247,9 +250,10 @@ public final class __Utils {
     public static void readQuitAndClose(final boolean daemon, final Closeable closeable) {
         Objects.requireNonNull(closeable, "closeable is null");
         readQuitAndCall(
-                daemon,
-                () -> {
-                    closeable.close();
+                daemon, // <daemon>
+                () -> { // <callable>
+                    closeable.close(); // IOException
+                    log.debug("closed: {}", closeable);
                     return null;
                 }
         );
@@ -555,6 +559,19 @@ public final class __Utils {
         final var appendable = (StringBuilder) formatter.out();
         appendable.delete(0, appendable.length());
         return formatter.format("0x%1$02X", octet & 0xFF).toString();
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    public static void logConnected(final SocketAddress remote, final SocketAddress local) {
+        log.info("connected to {}, through {}", remote, local);
+    }
+
+    public static void logAccepted(final SocketAddress remote, final SocketAddress local) {
+        log.info("accepted from {}, through {}", remote, local);
+    }
+
+    public static void logEof(final SocketAddress address) {
+        log.info("received an EOF, from {}", address);
     }
 
     // -----------------------------------------------------------------------------------------------------------------

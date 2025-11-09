@@ -1,17 +1,28 @@
 package com.github.onacit.rfc862;
 
-import com.github.onacit.__Constants;
 import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
 
+    private static final int CAPACITY_MAX = 1;
+
+    static {
+        assert CAPACITY_MAX > 0;
+    }
+
+    /**
+     * .
+     *
+     * @param args an array of command line arguments.
+     * @throws IOException if an I/O error occurs.
+     */
     public static void main(final String... args) throws IOException {
         try (var selector = Selector.open(); // IOException
              var client = SocketChannel.open()) { // IOException
@@ -19,9 +30,7 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
             assert client.isBlocking();
             client.configureBlocking(false);
             assert !client.isBlocking();
-            // --------------------------------------------------------------------------------- prepare a list of lines
-            final var lines = new CopyOnWriteArrayList<String>();
-            // --------------------------------------------- try to connect, and register the <client> to the <selector>
+            // ----------------------------------------------------- try to connect, and register <client> to <selector>
             final SelectionKey clientKey;
             final var remote = __Utils.parseSocketAddress(_Constants.PORT, args).orElse(_Constants.SERVER_ENDPOINT);
             if (client.connect(remote)) { // IOException
@@ -30,26 +39,27 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                           client.getLocalAddress() // IOException
                 );
                 // ------------------------------------------------------------------ register <clientKey> to <selector>
-                clientKey = client.register(selector, 0); // ClosedChannelException
-                // ------------------------------------------------- read '!quit', cancel <clientKey>, wakeup <selector>
-                __Utils.readQuitAndRun(
-                        true,
-                        () -> {
-                            clientKey.cancel();
-                            assert !clientKey.isValid();
-                            selector.wakeup();
-                        },
-                        l -> {
-                            lines.add(l);
-                            clientKey.interestOpsOr(SelectionKey.OP_WRITE);
-                            assert !clientKey.isWritable(); // still
-                            selector.wakeup();
-                        }
-                );
+                clientKey = client.register(selector, SelectionKey.OP_WRITE); // ClosedChannelException
+                // -------------------------------------------------------------------------------- attach a byte buffer
+                final var buffer = ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(CAPACITY_MAX) + 1);
+                assert buffer.capacity() > 0;
+                assert buffer.hasArray();
+                buffer.position(buffer.limit());
+                clientKey.attach(buffer);
             } else {
-                log.debug("not, immediately, connected");
+                log.debug("not (immediately) connected. registering for <OP_CONNECT>...");
                 clientKey = client.register(selector, SelectionKey.OP_CONNECT); // ClosedChannelException
+                assert !clientKey.isConnectable();
             }
+            // ------------------------------------------------ read '!quit', cancel <clientKey>, and wake up <selector>
+            __Utils.readQuitAndRun(
+                    true,
+                    () -> {
+                        clientKey.cancel();
+                        assert !clientKey.isValid();
+                        selector.wakeup();
+                    }
+            );
             // ------------------------------------------------------------------------------- keep sending random bytes
             while (clientKey.isValid()) {
                 // ---------------------------------------------------------------------------------------------- select
@@ -65,68 +75,79 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                     if (key.isConnectable()) {
                         final var finished = client.finishConnect(); // IOException
                         assert finished; // why?
-                        log.debug("connected to {}, through {}",
-                                  client.getRemoteAddress(), // IOException
-                                  client.getLocalAddress() // IOException
+                        __Utils.logConnected(
+                                client.getRemoteAddress(), // IOException
+                                client.getLocalAddress() // IOException
                         );
                         // -------------------------------------------------------------------------- unset <OP_CONNECT>
                         key.interestOpsAnd(~SelectionKey.OP_CONNECT);
-                        // ---------------------------------------------------------------- start new thread reads lines
-                        __Utils.readQuitAndRun(
-                                true,
-                                () -> {
-                                    clientKey.cancel();
-                                    assert !clientKey.isValid();
-                                    selector.wakeup();
-                                },
-                                l -> {
-                                    lines.add(l);
-                                    clientKey.interestOpsOr(SelectionKey.OP_WRITE);
-                                    assert !clientKey.isWritable(); // still
-                                    selector.wakeup();
-                                }
-                        );
+                        assert key.isConnectable();
+                        // ------------------------------------------------------------------------ attach a byte buffer
+                        final var buffer = ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(CAPACITY_MAX) + 1);
+                        assert buffer.capacity() > 0;
+                        assert buffer.hasArray();
+                        buffer.position(buffer.limit());
+                        clientKey.attach(buffer);
+                        // ------------------------------------------------------------------------------ set <OP_WRITE>
+                        key.interestOpsOr(SelectionKey.OP_WRITE);
+                        assert !clientKey.isWritable();
                     }
                     // -------------------------------------------------------------------------------- writable -> send
                     if (key.isWritable()) {
-                        var buffer = (ByteBuffer) key.attachment();
-                        if (buffer == null) {
-                            assert !lines.isEmpty();
-                            buffer = ByteBuffer.wrap(
-                                    (lines.removeFirst() + System.lineSeparator()).getBytes()
-                            );
-                            key.attach(buffer);
-                        } else {
+                        final var buffer = (ByteBuffer) key.attachment();
+                        assert buffer.capacity() > 0;
+                        assert buffer.hasArray();
+                        if (!buffer.hasRemaining()) {
+                            ThreadLocalRandom.current().nextBytes(buffer.array());
+                            buffer.clear();
+                            assert buffer.position() == 0;
+                            assert buffer.limit() == buffer.capacity();
                             assert buffer.hasRemaining();
                         }
                         final var w = ((WritableByteChannel) channel).write(buffer); // IOException
                         assert w >= 0; // why?
-                        if (!buffer.hasRemaining()) {
-                            buffer.clear();
-                            key.interestOpsAnd(~SelectionKey.OP_WRITE);
-                            assert key.isWritable(); // still
-                            key.interestOpsOr(SelectionKey.OP_READ);
-                            assert !key.isReadable();
+                        if (w > 0) {
+                            clientKey.interestOpsAnd(~SelectionKey.OP_WRITE);
+                            assert clientKey.isWritable();
+                            clientKey.interestOpsOr(SelectionKey.OP_READ);
+                            assert !clientKey.isReadable();
+                            buffer.flip(); // limit -> position, position -> zero
+                            assert buffer.hasRemaining();
                         }
                     }
                     // ----------------------------------------------------------------------------- readable -> receive
                     if (key.isReadable()) {
                         final var buffer = (ByteBuffer) key.attachment();
                         assert buffer != null;
+                        assert buffer.capacity() > 0;
                         assert buffer.hasRemaining();
                         final var r = ((ReadableByteChannel) channel).read(buffer);
                         if (r == -1) {
+                            __Utils.logEof(((SocketChannel) channel).getRemoteAddress());
                             key.cancel();
                             assert !key.isValid();
-                        } else {
-                            assert r >= 0;
-                            if (!buffer.hasRemaining()) {
-                                System.out.print(__Constants.CHARSET.decode(buffer.flip()));
-                                key.attach(null);
-                                key.interestOpsAnd(~SelectionKey.OP_READ);
-                                if (!lines.isEmpty()) {
+                            continue;
+                        }
+                        assert r >= 0;
+                        for (int p = buffer.position() - r; p < buffer.position(); p++) {
+                            log.debug("echoed, {}, back from {}", __Utils.formatOctet(buffer.get(p)),
+                                      ((SocketChannel) channel).getRemoteAddress());
+                        }
+                        if (!buffer.hasRemaining()) {
+                            key.interestOpsAnd(~SelectionKey.OP_READ);
+                            if (_Constants.TCP_CLIENT_THROTTLE) {
+                                Thread.ofVirtual().name("write-op-setter").start(() -> {
+                                    try {
+                                        Thread.sleep(ThreadLocalRandom.current().nextInt(1024) + 1024);
+                                    } catch (final InterruptedException ie) {
+                                        Thread.currentThread().interrupt();
+                                        clientKey.cancel();
+                                        assert !clientKey.isValid();
+                                        return;
+                                    }
                                     key.interestOpsOr(SelectionKey.OP_WRITE);
-                                }
+                                    selector.wakeup();
+                                });
                             }
                         }
                     }

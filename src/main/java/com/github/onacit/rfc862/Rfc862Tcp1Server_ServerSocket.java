@@ -37,15 +37,15 @@ class Rfc862Tcp1Server_ServerSocket extends Rfc862Tcp$Server {
                 executor.submit(() -> {
                     assert Thread.currentThread().isDaemon();
                     try {
-                        log.debug("accepted from {}", client.getRemoteSocketAddress());
+                        __Utils.logAccepted(client.getRemoteSocketAddress(), client.getLocalSocketAddress());
                         for (int b; !server.isClosed(); ) {
                             b = client.getInputStream().read(); // IOException
                             if (b == -1) {
-                                log.debug("received EOF from {}", client.getRemoteSocketAddress());
+                                __Utils.logEof(client.getRemoteSocketAddress());
                                 break;
                             }
-                            log.debug("echoing, {}, back to {}", String.format("0x%02X", b),
-                                      client.getRemoteSocketAddress());
+                            assert b >= 0 && b <= 255;
+                            _Utils.logEchoing(b, client.getRemoteSocketAddress());
                             client.getOutputStream().write(b); // IOException
                             client.getOutputStream().flush(); // IOException
                         }
