@@ -123,7 +123,7 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                         assert buffer.hasRemaining();
                         final var r = ((ReadableByteChannel) channel).read(buffer);
                         if (r == -1) {
-                            __Utils.logEof(((SocketChannel) channel).getRemoteAddress());
+                            __Utils.logReceivedEof(((SocketChannel) channel).getRemoteAddress());
                             key.cancel();
                             assert !key.isValid();
                             continue;

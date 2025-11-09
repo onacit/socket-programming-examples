@@ -41,7 +41,7 @@ class Rfc862Tcp1Server_ServerSocket extends Rfc862Tcp$Server {
                         for (int b; !server.isClosed(); ) {
                             b = client.getInputStream().read(); // IOException
                             if (b == -1) {
-                                __Utils.logEof(client.getRemoteSocketAddress());
+                                __Utils.logReceivedEof(client.getRemoteSocketAddress());
                                 break;
                             }
                             assert b >= 0 && b <= 255;

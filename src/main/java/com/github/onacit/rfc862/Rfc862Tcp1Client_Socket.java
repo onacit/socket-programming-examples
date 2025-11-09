@@ -52,7 +52,7 @@ class Rfc862Tcp1Client_Socket extends Rfc862Tcp$Client {
                 // receive
                 e = client.getInputStream().read(); // IOException
                 if (e == -1) {
-                    __Utils.logEof(client.getRemoteSocketAddress());
+                    __Utils.logReceivedEof(client.getRemoteSocketAddress());
                     break;
                 }
                 assert e == (b & 0xFF); // [0..255]

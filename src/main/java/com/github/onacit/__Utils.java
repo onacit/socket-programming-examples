@@ -564,16 +564,34 @@ public final class __Utils {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Logs that a client has connected to the specified remote address through the specified local address.
+     *
+     * @param remote the remote address connected to.
+     * @param local  the local address connected through.
+     */
     public static void logConnected(final SocketAddress remote, final SocketAddress local) {
         log.info("connected to {}, through {}", remote, local);
     }
 
+    /**
+     * Logs that a server has accepted a client from the specified remote address through the specified local address.
+     *
+     * @param remote the remote address accepted from.
+     * @param local  the local address accepted through.
+     */
     public static void logAccepted(final SocketAddress remote, final SocketAddress local) {
         log.info("accepted from {}, through {}", remote, local);
     }
 
-    public static void logEof(final SocketAddress address) {
-        log.info("received an EOF, from {}", address);
+    /**
+     * Logs that a socket has received an EOF from the specified remote address.
+     *
+     * @param remote the remote address from which an EOF received from.
+     */
+    public static void logReceivedEof(final SocketAddress remote) {
+        log.info("received an EOF, from {}", remote);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
