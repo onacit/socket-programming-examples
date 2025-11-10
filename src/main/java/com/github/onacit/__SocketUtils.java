@@ -114,7 +114,7 @@ public final class __SocketUtils {
         return s;
     }
 
-    public static <T extends ServerSocketChannel> T SO_REUSEADDR_ON(final T s) throws IOException {
+    public static <T extends ServerSocketChannel> T SO_REUSEADDR(final T s) throws IOException {
         return SO_REUSEADDR(s, Boolean.TRUE);
     }
 

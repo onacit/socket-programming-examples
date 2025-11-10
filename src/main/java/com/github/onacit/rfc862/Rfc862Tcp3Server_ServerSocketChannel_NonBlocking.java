@@ -1,40 +1,23 @@
 package com.github.onacit.rfc862;
 
+import com.github.onacit.__SocketUtils;
 import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 class Rfc862Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc862Tcp$Server {
-
-    private static final int CAPACITY_MAX = 1;
-
-    static {
-        assert CAPACITY_MAX > 0;
-    }
 
     public static void main(final String... args) throws IOException {
         try (var selector = Selector.open(); // IOException
              var server = ServerSocketChannel.open()) { // IOException
             assert !server.isBlocking();
             // ------------------------------------------------------------------------------- try to reuse address/port
-            try {
-                server.setOption(StandardSocketOptions.SO_REUSEADDR, Boolean.TRUE); // IOException
-            } catch (final UnsupportedOperationException uoe) {
-                log.error("failed to set {}", StandardSocketOptions.SO_REUSEADDR, uoe);
-                // empty
-            }
-            try {
-                server.setOption(StandardSocketOptions.SO_REUSEPORT, Boolean.TRUE); // IOException
-            } catch (final UnsupportedOperationException uoe) {
-                log.error("failed to set {}", StandardSocketOptions.SO_REUSEPORT, uoe);
-                // empty
-            }
+            __SocketUtils.SO_REUSEADDR(server);
+            __SocketUtils.SO_REUSEPORT(server);
             // ---------------------------------------------------------------------------------------------------- bind
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND);
             assert server.socket().isBound();
@@ -79,22 +62,19 @@ class Rfc862Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc862Tcp$Server 
                         assert channel instanceof ServerSocketChannel;
                         assert channel == server;
                         final var client = ((ServerSocketChannel) channel).accept(); // IOException
-                        log.debug("accepted from {}, through {}",
-                                  client.getRemoteAddress(),
-                                  client.getLocalAddress() // IOException
-                        );
-                        // ---------------------------------------------------------------------- configure non-blocking
+                        __Utils.logAccepted(client.getRemoteAddress(), client.getLocalAddress());
                         assert client.isBlocking();
+                        // ---------------------------------------------------------------------- configure non-blocking
                         client.configureBlocking(false); // IOException
                         assert !client.isBlocking();
                         // ----------------------------------------------- register <client> to <selector> for <OP_READ>
                         final var clientKey = client.register(
                                 selector,
                                 SelectionKey.OP_READ,
-                                ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(CAPACITY_MAX) + 11)
+                                ByteBuffer.allocate(_Utils.getTcpServerBufferCapacity())
                         ); // ClosedChannelException
                     }
-                    // -------------------------------------------------------------------------------- readable -> read
+                    // ----------------------------------------------------------------------------- readable -> receive
                     if (key.isReadable()) { // CanceledKeyException
                         assert channel instanceof SocketChannel;
                         final var buffer = (ByteBuffer) key.attachment();
@@ -106,10 +86,7 @@ class Rfc862Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc862Tcp$Server 
                             continue;
                         }
                         assert r >= 0; // @@?
-                        if (buffer.position() > 0) {
-                            key.interestOpsAnd(~SelectionKey.OP_READ);
-                            assert key.isReadable();
-                            buffer.flip(); // limit -> position, position -> zero
+                        if (buffer.position() > 0) { // has remaining bytes to send
                             key.interestOpsOr(SelectionKey.OP_WRITE);
                             assert !key.isWritable();
                         }
@@ -118,23 +95,17 @@ class Rfc862Tcp3Server_ServerSocketChannel_NonBlocking extends Rfc862Tcp$Server 
                     if (key.isWritable()) {
                         assert channel instanceof SocketChannel;
                         final var buffer = (ByteBuffer) key.attachment();
-                        {
-                            assert buffer.hasRemaining();
-                        }
+                        buffer.flip();
+                        assert buffer.hasRemaining();
                         for (int p = buffer.position(); p < buffer.limit(); p++) {
                             _Utils.logEchoing(buffer.get(p), ((SocketChannel) channel).getRemoteAddress());
                         }
                         w = ((WritableByteChannel) channel).write(buffer); // IOException
                         assert w >= 0; // @@?
-                        if (!buffer.hasRemaining()) {
+                        buffer.compact();
+                        if (buffer.position() == 0) { // no remaining bytes to send
                             key.interestOpsAnd(~SelectionKey.OP_WRITE);
                             assert key.isWritable();
-                            buffer.compact();
-                            assert buffer.position() == 0;
-                            assert buffer.limit() == buffer.capacity();
-                            assert buffer.hasRemaining();
-                            key.interestOpsOr(SelectionKey.OP_READ);
-                            assert !key.isReadable();
                         }
                     }
                 }

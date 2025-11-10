@@ -4,9 +4,20 @@ import com.github.onacit.__Utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.SocketAddress;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 final class _Utils {
+
+    static int getTcpClientBufferCapacity() {
+        return ThreadLocalRandom.current().nextInt(_Constants.TCP_CLIENT_BUFFER_CAPACITY_MAX) + 1;
+    }
+
+    static int getTcpServerBufferCapacity() {
+        return ThreadLocalRandom.current().nextInt(_Constants.TCP_SERVER_BUFFER_CAPACITY_MAX) + 1;
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
 
     static void logEchoing(final int octet, final SocketAddress address) {
         log.debug("echoing, {}, back to {}", __Utils.formatOctet(octet), address);

@@ -34,6 +34,11 @@ final class _Constants {
 
     static final boolean TCP_CLIENT_THROTTLE = true;
 
+    static final int TCP_CLIENT_BUFFER_CAPACITY_MAX = 1;
+
+    // -----------------------------------------------------------------------------------------------------------------
+    static final int TCP_SERVER_BUFFER_CAPACITY_MAX = 1;
+
     // -----------------------------------------------------------------------------------------------------------------
     static final boolean UDP_CLIENT_BIND = ThreadLocalRandom.current().nextBoolean();
 

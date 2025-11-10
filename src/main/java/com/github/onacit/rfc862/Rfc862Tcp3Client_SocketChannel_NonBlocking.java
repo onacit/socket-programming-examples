@@ -11,12 +11,6 @@ import java.util.concurrent.ThreadLocalRandom;
 @Slf4j
 class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
 
-    private static final int CAPACITY_MAX = 1;
-
-    static {
-        assert CAPACITY_MAX > 0;
-    }
-
     /**
      * .
      *
@@ -41,7 +35,7 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                 // ------------------------------------------------------------------ register <clientKey> to <selector>
                 clientKey = client.register(selector, SelectionKey.OP_WRITE); // ClosedChannelException
                 // -------------------------------------------------------------------------------- attach a byte buffer
-                final var buffer = ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(CAPACITY_MAX) + 1);
+                final var buffer = ByteBuffer.allocate(_Utils.getTcpClientBufferCapacity());
                 assert buffer.capacity() > 0;
                 assert buffer.hasArray();
                 buffer.position(buffer.limit());
@@ -85,14 +79,14 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                         key.interestOpsAnd(~SelectionKey.OP_CONNECT);
                         assert key.isConnectable();
                         // ------------------------------------------------------------------------ attach a byte buffer
-                        final var buffer = ByteBuffer.allocate(ThreadLocalRandom.current().nextInt(CAPACITY_MAX) + 1);
+                        final var buffer = ByteBuffer.allocate(_Utils.getTcpClientBufferCapacity());
                         assert buffer.capacity() > 0;
                         assert buffer.hasArray();
                         buffer.position(buffer.limit());
-                        clientKey.attach(buffer);
+                        key.attach(buffer);
                         // ------------------------------------------------------------------------------ set <OP_WRITE>
                         key.interestOpsOr(SelectionKey.OP_WRITE);
-                        assert !clientKey.isWritable();
+                        assert !key.isWritable();
                     }
                     // -------------------------------------------------------------------------------- writable -> send
                     if (key.isWritable()) {
@@ -110,12 +104,12 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                         w = ((WritableByteChannel) channel).write(buffer); // IOException
                         assert w >= 0; // @@?
                         if (w > 0) {
-                            clientKey.interestOpsAnd(~SelectionKey.OP_WRITE);
-                            assert clientKey.isWritable();
-                            clientKey.interestOpsOr(SelectionKey.OP_READ);
-                            assert !clientKey.isReadable();
+                            key.interestOpsAnd(~SelectionKey.OP_WRITE);
+                            assert key.isWritable();
                             buffer.flip(); // limit -> position, position -> zero
                             assert buffer.hasRemaining();
+                            key.interestOpsOr(SelectionKey.OP_READ);
+                            assert !key.isReadable();
                         }
                     }
                     // ----------------------------------------------------------------------------- readable -> receive
@@ -143,8 +137,8 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                                         Thread.sleep(ThreadLocalRandom.current().nextInt(1024) + 1024);
                                     } catch (final InterruptedException ie) {
                                         Thread.currentThread().interrupt();
-                                        clientKey.cancel();
-                                        assert !clientKey.isValid();
+                                        key.cancel();
+                                        assert !key.isValid();
                                         return;
                                     }
                                     key.interestOpsOr(SelectionKey.OP_WRITE);
