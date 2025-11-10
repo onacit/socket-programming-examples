@@ -61,7 +61,9 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                     }
             );
             // ------------------------------------------------------------------------------- keep sending random bytes
-            while (clientKey.isValid()) {
+            // w: number of written bytes
+            // r: number of read bytes
+            for (int w, r; clientKey.isValid(); ) {
                 // ---------------------------------------------------------------------------------------------- select
                 final var count = selector.select(0L); // IOException
                 assert count >= 0; // why not 1?
@@ -98,14 +100,15 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                         assert buffer.capacity() > 0;
                         assert buffer.hasArray();
                         if (!buffer.hasRemaining()) {
+                            assert buffer.position() == buffer.limit();
                             ThreadLocalRandom.current().nextBytes(buffer.array());
                             buffer.clear();
                             assert buffer.position() == 0;
                             assert buffer.limit() == buffer.capacity();
                             assert buffer.hasRemaining();
                         }
-                        final var w = ((WritableByteChannel) channel).write(buffer); // IOException
-                        assert w >= 0; // why?
+                        w = ((WritableByteChannel) channel).write(buffer); // IOException
+                        assert w >= 0; // @@?
                         if (w > 0) {
                             clientKey.interestOpsAnd(~SelectionKey.OP_WRITE);
                             assert clientKey.isWritable();
@@ -121,7 +124,7 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                         assert buffer != null;
                         assert buffer.capacity() > 0;
                         assert buffer.hasRemaining();
-                        final var r = ((ReadableByteChannel) channel).read(buffer);
+                        r = ((ReadableByteChannel) channel).read(buffer);
                         if (r == -1) {
                             __Utils.logReceivedEof(((SocketChannel) channel).getRemoteAddress());
                             key.cancel();
@@ -130,8 +133,7 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                         }
                         assert r >= 0;
                         for (int p = buffer.position() - r; p < buffer.position(); p++) {
-                            log.debug("echoed, {}, back from {}", __Utils.formatOctet(buffer.get(p)),
-                                      ((SocketChannel) channel).getRemoteAddress());
+                            _Utils.logEchoed(buffer.get(p), ((SocketChannel) channel).getRemoteAddress());
                         }
                         if (!buffer.hasRemaining()) {
                             key.interestOpsAnd(~SelectionKey.OP_READ);
