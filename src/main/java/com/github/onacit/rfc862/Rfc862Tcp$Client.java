@@ -2,7 +2,6 @@ package com.github.onacit.rfc862;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * An abstract class for {@code TCP} clients send requests to {@link Rfc862Tcp$Server} servers.
@@ -10,7 +9,9 @@ import lombok.extern.slf4j.Slf4j;
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
-@Slf4j
+@SuppressWarnings({
+        "java:S101" // Class names should comply with a naming convention
+})
 abstract class Rfc862Tcp$Client {
 
 }

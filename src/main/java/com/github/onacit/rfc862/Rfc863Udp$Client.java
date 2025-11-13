@@ -10,7 +10,9 @@ import lombok.extern.slf4j.Slf4j;
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
-@Slf4j
+@SuppressWarnings({
+        "java:S101" // Class names should comply with a naming convention
+})
 abstract class Rfc863Udp$Client {
 
 }

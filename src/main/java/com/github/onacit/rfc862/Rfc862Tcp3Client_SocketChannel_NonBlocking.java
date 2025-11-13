@@ -35,7 +35,7 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                 // ------------------------------------------------------------------ register <clientKey> to <selector>
                 clientKey = client.register(selector, SelectionKey.OP_WRITE); // ClosedChannelException
                 // -------------------------------------------------------------------------------- attach a byte buffer
-                final var buffer = ByteBuffer.allocate(_Utils.getTcpClientBufferCapacity());
+                final var buffer = ByteBuffer.allocate(_Utils.getRandomTcpClientBufferCapacity());
                 assert buffer.capacity() > 0;
                 assert buffer.hasArray();
                 buffer.position(buffer.limit());
@@ -79,7 +79,7 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
                         key.interestOpsAnd(~SelectionKey.OP_CONNECT);
                         assert key.isConnectable();
                         // ------------------------------------------------------------------------ attach a byte buffer
-                        final var buffer = ByteBuffer.allocate(_Utils.getTcpClientBufferCapacity());
+                        final var buffer = ByteBuffer.allocate(_Utils.getRandomTcpClientBufferCapacity());
                         assert buffer.capacity() > 0;
                         assert buffer.hasArray();
                         buffer.position(buffer.limit());
