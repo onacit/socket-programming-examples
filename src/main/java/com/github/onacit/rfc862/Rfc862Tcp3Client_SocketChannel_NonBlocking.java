@@ -47,16 +47,16 @@ class Rfc862Tcp3Client_SocketChannel_NonBlocking extends Rfc862Tcp$Client {
             }
             // ------------------------------------------------ read '!quit', cancel <clientKey>, and wake up <selector>
             __Utils.readQuitAndRun(
-                    true,
-                    () -> {
+                    true,   // <daemon>
+                    () -> { // <runnable>
                         clientKey.cancel();
                         assert !clientKey.isValid();
                         selector.wakeup();
                     }
             );
             // ------------------------------------------------------------------------------- keep sending random bytes
-            // w: number of written bytes
-            // r: number of read bytes
+            // w: number of bytes written
+            // r: number of bytes read
             for (int w, r; clientKey.isValid(); ) {
                 // ---------------------------------------------------------------------------------------------- select
                 final var count = selector.select(0L); // IOException

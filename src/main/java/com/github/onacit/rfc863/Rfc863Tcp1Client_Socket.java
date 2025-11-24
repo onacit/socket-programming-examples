@@ -35,14 +35,11 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
             // ----------------------------------------------------------------------------------------- bind (optional)
             if (_Constants.TCP_CLIENT_BIND_MANUALLY) {
                 assert !client.isBound() : "client is already bound";
-                assert client.getLocalSocketAddress() == null;
                 client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0));
                 assert client.isBound();
-                assert client.getLocalSocketAddress() != null;
                 log.debug("bound to {}", client.getLocalSocketAddress());
             }
             // ------------------------------------------------------------------------------------------------- connect
-            assert !client.isConnected();
             client.connect(_Constants.SERVER_ENDPOINT, _Constants.TCP_CLIENT_CONNECT_TIMEOUT); // IOException
             assert client.isConnected();
             assert client.getRemoteSocketAddress() != null;
@@ -53,24 +50,6 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
             if (_Constants.TCP_CLIENT_SHUTDOWN_INPUT) {
                 log.debug("shutting down the input...");
                 client.shutdownInput(); // IOException
-                try {
-                    final var b = client.getInputStream().read(); // IOException
-                    assert false;
-                } catch (final IOException ioe) {
-                    // expected
-                }
-                try {
-                    final var r = client.getInputStream().read(new byte[0]);
-                    assert false;
-                } catch (final IOException ioe) {
-                    // expected
-                }
-                try {
-                    final var r = client.getInputStream().read(new byte[1]);
-                    assert false;
-                } catch (final IOException ioe) {
-                    // expected;
-                }
             }
             // ------------------------------------------------------------------------ read `!quit`, and close <client>
             __Utils.readQuitAndClose(true, client);
