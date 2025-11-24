@@ -54,8 +54,8 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
                         }
                         // ------------------------------------------------------------------------------ keep receiving
                         final var input = client.getInputStream(); // IOException
-                        for (int b; !server.isClosed(); ) { // IOException
-                            b = input.read();
+                        while (!server.isClosed()) { // IOException
+                            final var b = input.read();
                             if (b == -1) {
                                 break;
                             }
