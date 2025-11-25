@@ -9,7 +9,7 @@ import java.net.ServerSocket;
 import java.util.concurrent.Executors;
 
 /**
- * A minimal TCP server that discards bytes received from clients.
+ * A TCP server that discards bytes received from clients.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
@@ -37,29 +37,30 @@ class Rfc863Tcp1Server_ServerSocket extends Rfc863Tcp$Server {
             // ---------------------------------------------------------------------------------------------------- bind
             server.bind(_Constants.SERVER_ENDPOINT_TO_BIND, _Constants.TCP_SERVER_BACKLOG); // IOException
             assert server.isBound();
-            log.info("bound to {}", server.getLocalSocketAddress());
+            log.debug("bound to {}", server.getLocalSocketAddress());
             // -------------------------------------------------------------------- read '!quit', and close the <server>
-            __Utils.readQuitAndClose(true, server);
+            __Utils.readQuitAndClose(
+                    true,  // <daemon>
+                    server // <closeable>
+            );
             // ------------------------------------------------------------------------------------------ keep accepting
             while (!server.isClosed()) {
                 final var client = server.accept(); // IOException
                 executor.submit(() -> {
                     try {
-                        final var address = client.getRemoteSocketAddress();
-                        log.debug("accepted from {}", address);
+                        log.debug("accepted from {}", client.getRemoteSocketAddress());
                         // ------------------------------------------------------------------ shutdown output (optional)
                         if (_Constants.TCP_SERVER_SHUTDOWN_CLIENT_OUTPUT) {
                             log.debug("shutting down the output...");
                             client.shutdownOutput(); // IOException
                         }
                         // ------------------------------------------------------------------------------ keep receiving
-                        final var input = client.getInputStream(); // IOException
                         while (!server.isClosed()) { // IOException
-                            final var b = input.read();
+                            final var b = client.getInputStream().read();
                             if (b == -1) {
                                 break;
                             }
-                            _Utils.logDiscarding(b, address);
+                            _Utils.logDiscarding(b, client.getRemoteSocketAddress());
                         }
                     } finally {
                         client.close(); // IOException

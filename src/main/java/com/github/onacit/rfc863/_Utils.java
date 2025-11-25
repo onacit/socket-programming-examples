@@ -12,7 +12,7 @@ import java.net.SocketAddress;
 final class _Utils {
 
     static void logDiscarding(final int octet, final SocketAddress address) {
-        log.debug("discarding, {}, received from {}", __Utils.formatOctet(octet), address);
+        log.debug("discarding {}, received from {}", __Utils.formatOctet(octet), address);
     }
 
     // -----------------------------------------------------------------------------------------------------------------

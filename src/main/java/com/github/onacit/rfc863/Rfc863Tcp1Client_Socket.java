@@ -10,7 +10,7 @@ import java.net.Socket;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * A TCP client that connects to a server and sends a random byte to it.
+ * A TCP client that connects to a server and sends random bytes to it.
  *
  * @author Jin Kwon &lt;onacit_at_gmail.com&gt;
  */
@@ -34,17 +34,14 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
             assert !client.isConnected();
             // ----------------------------------------------------------------------------------------- bind (optional)
             if (_Constants.TCP_CLIENT_BIND_MANUALLY) {
-                assert !client.isBound() : "client is already bound";
                 client.bind(new InetSocketAddress(__Constants.ANY_LOCAL, 0));
                 assert client.isBound();
                 log.debug("bound to {}", client.getLocalSocketAddress());
             }
             // ------------------------------------------------------------------------------------------------- connect
-            client.connect(_Constants.SERVER_ENDPOINT, _Constants.TCP_CLIENT_CONNECT_TIMEOUT); // IOException
+            client.connect(_Constants.SERVER_ENDPOINT); // IOException
             assert client.isConnected();
-            assert client.getRemoteSocketAddress() != null;
             assert client.isBound(); // !!!
-            assert client.getLocalSocketAddress() != null;
             log.debug("connected to {}, through {}", client.getRemoteSocketAddress(), client.getLocalSocketAddress());
             // ------------------------------------------------------------------------------- shutdown input (optional)
             if (_Constants.TCP_CLIENT_SHUTDOWN_INPUT) {
@@ -52,10 +49,13 @@ class Rfc863Tcp1Client_Socket extends Rfc863Tcp$Client {
                 client.shutdownInput(); // IOException
             }
             // ------------------------------------------------------------------------ read `!quit`, and close <client>
-            __Utils.readQuitAndClose(true, client);
+            __Utils.readQuitAndClose(
+                    true,  // <daemon>
+                    client // <closeable>
+            );
             // ------------------------------------------------------------------------------ keep sending random octets
-            for (int b; !client.isClosed(); ) {
-                b = ThreadLocalRandom.current().nextInt(256); // [0..255]
+            while (!client.isClosed()) {
+                final var b = ThreadLocalRandom.current().nextInt();
                 client.getOutputStream().write(b); // IOException
                 client.getOutputStream().flush(); // IOException
                 if (_Constants.TCP_CLIENT_THROTTLE) {
